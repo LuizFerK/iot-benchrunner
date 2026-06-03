@@ -45,12 +45,12 @@
   /* Progress bar */
   #progress-bar {
     position: fixed;
-    top: 0;
+    top: 52px;
     left: 0;
     height: 2px;
     background: var(--primary);
     transition: width 0.3s ease;
-    z-index: 100;
+    z-index: 99;
   }
 
   /* Slide container */
@@ -81,15 +81,27 @@
 
   /* Slide backgrounds */
   .slide-light {
-    background: var(--canvas);
+    background-color: var(--canvas);
+    background-image:
+      linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 
   .slide-soft {
-    background: var(--canvas-soft);
+    background-color: var(--canvas-soft);
+    background-image:
+      linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 
   .slide-dark {
-    background: var(--canvas-night);
+    background-color: var(--canvas-night);
+    background-image:
+      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
     color: var(--on-dark);
   }
 
@@ -98,7 +110,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 56px 72px 80px;
+    padding: 76px 72px 72px;
     overflow: hidden;
   }
 
@@ -108,7 +120,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 72px 80px;
+    padding: 76px 72px 72px;
     text-align: center;
     overflow: hidden;
   }
@@ -295,13 +307,14 @@
 
   /* Code block */
   .code-block {
-    background: var(--canvas-night);
+    background: var(--canvas-soft);
+    border: 1px solid var(--hairline);
     border-radius: 6px;
     padding: 16px 20px;
     font-family: ui-monospace, Menlo, Monaco, Consolas, 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.5;
-    color: var(--on-dark);
+    color: var(--ink);
     white-space: pre;
     overflow-x: auto;
   }
@@ -315,9 +328,8 @@
   }
 
   .list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    position: relative;
+    padding-left: 18px;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.5;
@@ -326,13 +338,13 @@
 
   .list li::before {
     content: '';
-    display: inline-block;
+    position: absolute;
+    left: 0;
+    top: calc(0.75em - 3px);
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: var(--primary);
-    flex-shrink: 0;
-    margin-top: 7px;
   }
 
   .slide-dark .list li {
@@ -541,54 +553,175 @@
     border: 1px solid var(--hairline);
   }
 
-  /* Navigation */
-  #nav {
+  /* Header */
+  #header {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
     display: flex;
-    gap: 8px;
-    z-index: 100;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    backdrop-filter: blur(0.5px);
+    -webkit-backdrop-filter: blur(0.5px);
+    background: rgba(255, 255, 255, 0.36);
+    border-bottom: 1px solid var(--hairline);
+    z-index: 101;
+    transition: background 0.3s ease, border-color 0.3s ease;
   }
 
-  .nav-btn {
+  .header-project {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s ease;
+  }
+
+  .header-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+
+  .header-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 0.3s ease;
+  }
+
+  .header-institution {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink-mute);
+    letter-spacing: 0.01em;
+    transition: color 0.3s ease;
+  }
+
+  /* Footer */
+  #footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    backdrop-filter: blur(0.5px);
+    -webkit-backdrop-filter: blur(0.5px);
+    background: rgba(255, 255, 255, 0.36);
+    border-top: 1px solid var(--hairline);
+    z-index: 101;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .nav-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 20px;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: 'Inter', sans-serif;
-    border: none;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--hairline-strong);
     border-radius: 6px;
+    color: var(--ink);
     cursor: pointer;
-    transition: background 0.15s ease;
-    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
   }
 
-  .nav-btn:hover {
-    background: var(--primary-deep);
+  .nav-icon-btn:hover {
+    background: var(--canvas-soft);
+    border-color: var(--ink-faint);
   }
 
-  .nav-btn:disabled {
-    opacity: 0.35;
+  .nav-icon-btn:disabled {
+    opacity: 0.3;
     cursor: default;
-    background: var(--primary);
+    background: transparent;
   }
 
-  /* Slide counter */
+  #btn-theme {
+    color: var(--ink-mute-2);
+  }
+
   #counter {
-    position: fixed;
-    bottom: 28px;
-    right: 32px;
     font-size: 13px;
     font-weight: 400;
     color: var(--ink-mute);
-    z-index: 100;
+    min-width: 52px;
+    text-align: center;
     font-family: 'Inter', sans-serif;
+    transition: color 0.3s ease;
+  }
+
+  /* Dark mode */
+  .dark-mode {
+    --canvas: #1a1a1a;
+    --canvas-soft: #1f1f1f;
+    --canvas-night: #0f0f0f;
+    --canvas-night-soft: #151515;
+    --ink: #efefef;
+    --ink-secondary: #d0d0d0;
+    --ink-mute: rgba(255,255,255,0.50);
+    --ink-mute-2: rgba(255,255,255,0.38);
+    --ink-faint: rgba(255,255,255,0.24);
+    --on-dark: #efefef;
+    --hairline: rgba(255,255,255,0.08);
+    --hairline-strong: rgba(255,255,255,0.14);
+    --hairline-cool: rgba(255,255,255,0.06);
+  }
+
+  .dark-mode .slide-light,
+  .dark-mode .slide-soft {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  }
+
+  .dark-mode #header,
+  .dark-mode #footer {
+    background: rgba(26, 26, 26, 0.50);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .dark-mode .header-project,
+  .dark-mode .header-name {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .dark-mode .header-institution {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .dark-mode #counter {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .dark-mode .nav-icon-btn {
+    color: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .dark-mode .nav-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   /* -----------------------------------------------
@@ -596,10 +729,6 @@
   ----------------------------------------------- */
 
   /* Slide 1 — Capa */
-  .slide-capa .slide-body-centered {
-    padding-top: 60px;
-  }
-
   .capa-title {
     font-size: 52px;
     font-weight: 500;
@@ -639,8 +768,8 @@
   }
 
   .infra-item {
-    background: var(--canvas-night-soft);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--canvas-soft);
+    border: 1px solid var(--hairline);
     border-radius: 12px;
     padding: 20px 24px;
   }
@@ -656,7 +785,7 @@
 
   .infra-item-body {
     font-size: 14px;
-    color: rgba(255,255,255,0.75);
+    color: var(--ink-mute);
     line-height: 1.5;
   }
 
@@ -673,18 +802,18 @@
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.45);
+    color: var(--ink-mute);
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid var(--hairline);
     margin-bottom: 10px;
   }
 
   .artefact-entry {
     font-size: 14px;
-    color: rgba(255,255,255,0.8);
+    color: var(--ink);
     line-height: 1.5;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid var(--hairline-cool);
   }
 
   .artefact-value-bad {
@@ -786,6 +915,17 @@
 <body>
 
 <div id="progress-bar"></div>
+
+<header id="header">
+  <div class="header-project">
+    <span class="header-dot"></span>
+    Benchmark Reprodutível &middot; IoTDB, InfluxDB e TimescaleDB
+  </div>
+  <div class="header-right">
+    <span class="header-name">Luiz Fernando Klein</span>
+    <span class="header-institution">Ciência da Computação &middot; UFFS</span>
+  </div>
+</header>
 
 <div id="slides-container">
 
@@ -1105,10 +1245,10 @@
   <!-- ============================================================
        SLIDE 9 — Metodologia: Infraestrutura Reprodutivel (DARK)
   ============================================================ -->
-  <div class="slide slide-dark" data-index="8">
+  <div class="slide slide-soft" data-index="8">
     <div class="slide-body">
       <div class="section-label">Metodologia</div>
-      <h2 class="display-lg slide-title" style="color: var(--on-dark);">Infraestrutura <span class="accent">Reprodutivel</span></h2>
+      <h2 class="display-lg slide-title">Infraestrutura <span class="accent">Reprodutivel</span></h2>
       <div class="divider"></div>
       <div class="infra-grid">
         <div class="infra-item">
@@ -1179,10 +1319,6 @@
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px;">Configuracao</div>
-            <div style="font-size: 14px; color: var(--ink);">20% dos dados chegam com atraso (distribuicao de Poisson)</div>
-          </div>
           <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
             <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
             <div style="font-size: 22px; font-weight: 500; color: var(--primary);">-13%</div>
@@ -1199,9 +1335,12 @@
             <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">WAL absorve bem a reordenacao</div>
           </div>
         </div>
-        <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 400px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_ooo_degradation.png" alt="Degradacao fora de ordem" style="max-height: 380px;">
+        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
+            <img src="../../tcc2-latex/figures/pt_br/chart_ooo_degradation.png" alt="Degradacao fora de ordem" style="max-height: 100%; max-width: 100%;">
+          </div>
+          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Configuracao</span>&ensp;20% dos dados chegam com atraso (distribuicao de Poisson)
           </div>
         </div>
       </div>
@@ -1218,10 +1357,6 @@
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px;">Padrao</div>
-            <div style="font-size: 14px; color: var(--ink);">Monitoramento IoT critico: "qual e a leitura atual do sensor X?"</div>
-          </div>
           <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
             <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
             <div style="font-size: 26px; font-weight: 500; color: var(--primary);">0,38 ms</div>
@@ -1238,9 +1373,12 @@
             <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce linearmente com arquivos TSM (sem atalho de ultimo valor)</div>
           </div>
         </div>
-        <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 400px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_latest_point_scaling.png" alt="Escalonamento de ultimo valor" style="max-height: 380px;">
+        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
+            <img src="../../tcc2-latex/figures/pt_br/chart_latest_point_scaling.png" alt="Escalonamento de ultimo valor" style="max-height: 100%; max-width: 100%;">
+          </div>
+          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrao</span>&ensp;Monitoramento IoT critico: "qual e a leitura atual do sensor X?"
           </div>
         </div>
       </div>
@@ -1257,10 +1395,6 @@
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px;">Padrao</div>
-            <div style="font-size: 14px; color: var(--ink);">Alerta por limiar: "leituras acima de X nos ultimos N dias"</div>
-          </div>
           <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
             <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
             <div style="font-size: 20px; font-weight: 500; color: var(--primary);">3,72 ms → 19,4 ms</div>
@@ -1277,9 +1411,12 @@
             <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce quase linearmente</div>
           </div>
         </div>
-        <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 400px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_value_filter_scaling.png" alt="Escalonamento de filtro de valor" style="max-height: 380px;">
+        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
+            <img src="../../tcc2-latex/figures/pt_br/chart_value_filter_scaling.png" alt="Escalonamento de filtro de valor" style="max-height: 100%; max-width: 100%;">
+          </div>
+          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrao</span>&ensp;Alerta por limiar: "leituras acima de X nos ultimos N dias"
           </div>
         </div>
       </div>
@@ -1354,15 +1491,15 @@
   <!-- ============================================================
        SLIDE 15 — Descoberta Metodologica: Artefatos de Benchmark (DARK)
   ============================================================ -->
-  <div class="slide slide-dark" data-index="14">
+  <div class="slide slide-soft" data-index="14">
     <div class="slide-body">
       <div class="section-label">Descoberta metodologica</div>
-      <h2 class="display-lg slide-title" style="color: var(--on-dark);">Artefatos de <span class="accent">Benchmark</span></h2>
+      <h2 class="display-lg slide-title">Artefatos de <span class="accent">Benchmark</span></h2>
       <div class="divider"></div>
       <div class="row" style="gap: 32px; align-items: flex-start;">
         <div class="col col-55" style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; line-height: 1.5;">Dois resultados das execucoes iniciais foram revertidos por reexecucoes isoladas:</div>
-          <table class="data-table data-table-dark" style="font-size: 13px;">
+          <div style="font-size: 14px; color: var(--ink-mute); margin-bottom: 4px; line-height: 1.5;">Dois resultados das execucoes iniciais foram revertidos por reexecucoes isoladas:</div>
+          <table class="data-table" style="font-size: 13px;">
             <thead>
               <tr>
                 <th>Resultado inicial</th>
@@ -1380,12 +1517,12 @@
               </tr>
             </tbody>
           </table>
-          <div class="card-dark" style="padding: 16px 20px; margin-top: 4px;">
-            <div style="font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5;">Medicoes de memoria mudaram em <strong style="color: var(--primary);">uma ordem de magnitude</strong> ao corrigir o ciclo de vida compartilhado dos conteineres</div>
+          <div class="card" style="padding: 16px 20px; margin-top: 4px;">
+            <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.5;">Medicoes de memoria mudaram em <strong style="color: var(--primary);">uma ordem de magnitude</strong> ao corrigir o ciclo de vida compartilhado dos conteineres</div>
           </div>
         </div>
         <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 360px; background: var(--canvas-night-soft); border-color: rgba(255,255,255,0.1);">
+          <div class="img-card" style="width: 100%; max-height: 360px;">
             <img src="../../tcc2-latex/figures/pt_br/chart_read_saturation_comparison.png" alt="Comparacao: recursos compartilhados vs. isolado" style="max-height: 340px;">
           </div>
         </div>
@@ -1545,14 +1682,29 @@
 
 </div><!-- /slides-container -->
 
-<!-- Navigation -->
-<div id="nav">
-  <button class="nav-btn" id="btn-prev" onclick="navigate(-1)" disabled>&#8592; Anterior</button>
-  <button class="nav-btn" id="btn-next" onclick="navigate(1)">Proximo &#8594;</button>
-</div>
-
-<!-- Slide counter -->
-<div id="counter">1 / 20</div>
+<footer id="footer">
+  <div style="flex: 1;"></div>
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <button class="nav-icon-btn" id="btn-prev" onclick="navigate(-1)" disabled>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span id="counter">1 / 20</span>
+    <button class="nav-icon-btn" id="btn-next" onclick="navigate(1)">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+  <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+    <button class="nav-icon-btn" id="btn-theme" onclick="toggleDarkMode()" title="Alternar tema">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</footer>
 
 <script>
   const slides = document.querySelectorAll('.slide');
@@ -1576,6 +1728,13 @@
     document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
     const pct = ((current + 1) / total) * 100;
     document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    document.getElementById('btn-theme').innerHTML = isDark
+      ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`
+      : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
   }
 
   document.addEventListener('keydown', function(e) {
