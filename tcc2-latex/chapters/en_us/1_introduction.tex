@@ -37,23 +37,23 @@ inefficiencies and memory limitations when dealing with large volumes of tempora
 TSDBs maintain high performance because they were built to treat time as their primary concern.
 Beyond raw throughput, TSDBs offer specialized compression mechanisms, time-interval data
 co-location, and automatic retention policies that reduce operational costs, features that
-are indispensable for IoT applications where continuous sensor measurements demand scalability
+are important for IoT applications where continuous sensor measurements demand scalability
 and economical resource usage~\citep{Dunning2014}.
 
 The TSDB landscape has expanded in recent years, with systems adopting distinct
-architectural approaches to the same problem. \textit{Apache IoTDB}~\cite{wang2023iotdb},
+architectural approaches to the same problem. \textit{Apache IoTDB}~\citep{wang2023iotdb},
 developed at Tsinghua University, is purpose-built for industrial IoT, using a custom columnar
 file format (TsFile) and a binary RPC protocol that enables extremely high ingestion rates.
 \textit{InfluxDB}, evaluated in four of the five performance studies reviewed in this
 work~\citep{naqvi2017influxdb,shah2022performance,lima2024avaliando,wang2023iotdb}, uses a
 Time-Structured Merge Tree (TSM) engine exposed via an HTTP line-protocol API. \textit{TimescaleDB}
-extends PostgreSQL with time-series capabilities~\citep{Ramakrishnan2003}, offering SQL compatibility
+extends PostgreSQL with time-series capabilities, offering SQL compatibility
 and the full relational ecosystem as trade-offs for lower raw write throughput. Each approach has
 distinct strengths and weaknesses that are not apparent from descriptions alone and require
 controlled measurement under realistic IoT workloads.
 
 The field of TSDB benchmarking, however, suffers from a critical methodological gap: the lack of
-reproducibility. A survey of recent comparative studies reveals that the majority of published
+reproducibility. A survey of recent comparative studies reveals that a large portion of published
 benchmarks do not provide sufficient scripts, configurations, or exact software versions to
 allow independent replication~\citep{pereira2023mulletbench,shah2022performance,naqvi2017influxdb}.
 Without reproducible methodology, findings cannot be independently validated, results are

@@ -40,25 +40,25 @@ memória ao lidar com grandes volumes de dados temporais, enquanto os BDSTs mant
 desempenho por terem sido construídos com o tempo como preocupação central. Além da vazão
 bruta, os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
 intervalos de tempo e políticas automáticas de retenção que reduzem os custos operacionais,
-recursos indispensáveis para aplicações IoT onde medições contínuas de sensores demandam
+recursos importantes para aplicações IoT onde medições contínuas de sensores demandam
 escalabilidade e uso econômico de recursos~\citep{Dunning2014}.
 
 O cenário dos BDSTs ampliou-se nos últimos anos, com sistemas adotando abordagens
 arquiteturais distintas para o mesmo problema.
-O \textit{Apache IoTDB}~\cite{wang2023iotdb}, desenvolvido na Universidade Tsinghua, foi
+O \textit{Apache IoTDB}~\citep{wang2023iotdb}, desenvolvido na Universidade Tsinghua, foi
 concebido especificamente para IoT industrial, utilizando um formato de arquivo colunar
 personalizado (TsFile) e um protocolo binário RPC que possibilita taxas de ingestão
 extremamente elevadas. O \textit{InfluxDB}, avaliado em quatro dos cinco estudos de desempenho revisados neste
 trabalho~\citep{naqvi2017influxdb,shah2022performance,lima2024avaliando,wang2023iotdb}, usa
 um motor de armazenamento Time-Structured Merge Tree (TSM) exposto via API HTTP com
 protocolo de linha. O \textit{TimescaleDB} estende o PostgreSQL com capacidades de séries
-temporais~\citep{Ramakrishnan2003}, oferecendo compatibilidade com SQL e o ecossistema
+temporais, oferecendo compatibilidade com SQL e o ecossistema
 relacional completo como contrapartida a uma menor vazão bruta de escrita. Cada abordagem
 possui pontos fortes e fracos distintos que não são aparentes apenas a partir de descrições
 e exigem medições controladas sob cargas de trabalho IoT realistas.
 
 O campo de benchmarking de BDSTs, no entanto, sofre de uma lacuna metodológica crítica: a
-falta de reprodutibilidade. Uma análise dos estudos comparativos recentes revela que a maioria
+falta de reprodutibilidade. Uma análise dos estudos comparativos recentes revela que grande parte
 dos benchmarks publicados não fornece scripts, configurações ou versões exatas de software
 suficientes para permitir replicação independente~\citep{pereira2023mulletbench,shah2022performance,naqvi2017influxdb}.
 Sem metodologia reprodutível, os resultados não podem ser validados de forma independente,

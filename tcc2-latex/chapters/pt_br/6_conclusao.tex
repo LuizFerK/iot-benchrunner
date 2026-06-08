@@ -94,24 +94,32 @@ moderados e memória restrita, o InfluxDB fornece o perfil mais equilibrado.
 
 As seguintes limitações delimitam as conclusões deste estudo:
 
-\textbf{Implantação em nó único.} Todos os bancos de dados foram executados em um único host,
+\subsubsection{Implantação em Nó Único}
+
+Todos os bancos de dados foram executados em um único host,
 eliminando a latência real de rede. O protocolo de linha HTTP do InfluxDB incorre em sobrecarga
 significativa de ida e volta em implantações distribuídas que a latência de loopback
 próxima de zero não captura.
 
-\textbf{Testes de leitura sequenciais.} As cargas de trabalho de leitura são executadas
+\subsubsection{Testes de Leitura Sequenciais}
+
+As cargas de trabalho de leitura são executadas
 sequencialmente no mesmo conjunto de dados dentro de uma sessão. Testes posteriores se
 beneficiam de caches de páginas do SO mais quentes e estruturas de banco de dados em memória.
 O isolamento com qualidade de produção exigiria flush dos caches e reinicialização do banco
 de dados entre os testes de leitura.
 
-\textbf{Durabilidade diferida do IoTDB.} A vazão de escrita do IoTDB reflete o reconhecimento
+\subsubsection{Durabilidade Diferida do IoTDB}
+
+A vazão de escrita do IoTDB reflete o reconhecimento
 em memória antes da persistência em disco. Implantações com requisitos estritos de durabilidade
 precisariam configurar o modo WAL síncrono, o que pode reduzir a vazão.
 
-\textbf{Aquecimento da JVM.} O desempenho de leitura e de escrita de ponto único do IoTDB
+\subsubsection{Aquecimento da JVM}
+
+O desempenho de leitura e de escrita de ponto único do IoTDB
 melhora significativamente ao longo da duração de uma sessão à medida que a compilação JIT
-otimiza os caminhos quentes. Benchmarks curtos subestimam a vazão em estado estacionário.
+otimiza os caminhos quentes~\citep{barrett2017warmup}. Benchmarks curtos subestimam a vazão em estado estacionário.
 Os valores na escala grande são os mais representativos do comportamento do IoTDB em produção.
 
 \subsection{Trabalhos Futuros}

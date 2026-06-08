@@ -31,7 +31,7 @@ shared this machine with no concurrent workloads running during test sessions.
 CPU utilization figures are expressed as a percentage of a single logical core, consistent
 with \texttt{docker stats} reporting conventions. A value of 600\% would indicate full
 utilization of all six physical cores; single-database values in the 20--100\% range
-indicate load well within the available compute budget.
+indicate load compatible with the available compute budget.
 
 \subsection{Write Performance}
 \label{sec:write-results}
@@ -57,10 +57,10 @@ TimescaleDB.
   \end{tabular}
 \end{table*}
 
-Three compounding architectural factors explain the gap.
+The results are consistent with three compounding architectural factors.
 
-\textbf{Protocol depth.} IoTDB's SESSION\_BY\_TABLET protocol submits a typed columnar
-tablet directly over a persistent TCP connection using binary Thrift serialization. One
+\textbf{Protocol depth.} iot-benchmark connects to IoTDB via the Thrift RPC Session API in SESSION\_BY\_TABLET mode,
+submitting typed columnar tablets directly over a persistent TCP connection. One
 syscall submits a full batch directly into the TsFile write buffer. InfluxDB requires an
 HTTP request per write, including connection management, line-protocol text parsing, and
 TSI index lookup. TimescaleDB routes every write through the full PostgreSQL stack:
@@ -73,16 +73,18 @@ when the memtable fills. This explicitly trades durability guarantee for through
 trade-off that must be evaluated per deployment. InfluxDB's TSM cache operates similarly
 but is bounded (8\,GB in the tuned configuration). TimescaleDB follows standard PostgreSQL
 semantics: every write is flushed through the WAL before acknowledgement, providing the
-strongest durability guarantee at the cost of per-write synchronous I/O.
+strongest durability guarantee at the cost of per-write synchronous input/output.
 
-\textbf{Index maintenance.} IoTDB's write path is thin above its JVM buffer. InfluxDB's
-TSM engine maintains a Time Series Index (TSI) on every write. TimescaleDB's B-tree and
-BRIN indexes grow with data volume, and autovacuum activity increases write overhead
+\textbf{Index maintenance.} IoTDB does not maintain synchronous indexes on the write path;
+data goes directly to the in-memory buffer without updating auxiliary structures.
+InfluxDB updates the Time Series Index (TSI) on every write. TimescaleDB maintains
+B-tree and BRIN indexes that grow with data volume, and the PostgreSQL autovacuum process,
+responsible for reclaiming space from obsolete records, adds overhead
 as the hypertable expands.
 
-The combination of these three factors indicates that IoTDB's write advantage has an
+The combination of these three factors suggests that IoTDB's write advantage has an
 architectural basis: the binary protocol, asynchronous buffering, and absence of
-synchronous index maintenance act cumulatively and are not eliminated by configuration
+synchronous index maintenance would act cumulatively and are not eliminated by configuration
 tuning.
 
 \begin{figure}[ht]
@@ -118,12 +120,12 @@ overhead. For InfluxDB, this is an HTTP round-trip plus TCP connection overhead;
 it is the fixed cost of a Thrift call per tablet. TimescaleDB's 42$\times$ ratio is
 markedly lower because PostgreSQL's WAL flush already dominates at BATCH=1: the per-row
 overhead is so high that larger batches provide proportionally less benefit; the bottleneck
-shifts from protocol overhead to storage I/O.
+shifts from protocol overhead to storage input/output.
 
 This result has direct practical significance. An IoT application that sends one sensor
 reading per HTTP request to InfluxDB will achieve 531$\times$ less throughput than one
-that buffers locally and writes in batches. At any write volume where batching is feasible,
-it is the single most impactful configuration choice for InfluxDB and IoTDB users.
+that buffers locally and writes in batches. For InfluxDB and IoTDB, aggregating writes into
+batches is the highest-impact optimization available.
 
 \subsubsection{Out-of-Order Ingestion}
 
@@ -145,12 +147,11 @@ Table~\ref{tab:ooo} shows how each database handles the 20\% late-arriving data 
   \end{tabular}
 \end{table*}
 
-TimescaleDB shows the smallest relative degradation because PostgreSQL's B-tree index
-updates are order-independent: inserting a row with an older timestamp incurs the same cost
-as inserting one at the current write frontier. IoTDB's 13.5\% penalty arises because its
-LSM-tree must compact disordered entries to restore the sorted order required by TsFile
-chunks. InfluxDB incurs the largest relative penalty (35.7\%) from TSM block rewrites
-needed to accommodate out-of-sequence points.
+TimescaleDB shows the smallest relative degradation, a result consistent with the
+order-independence of PostgreSQL's B-tree index updates. IoTDB's 13.5\% penalty
+is consistent with the cost of compacting disordered entries in the LSM-tree to restore
+the sorted order required by TsFile chunks. InfluxDB's largest relative penalty (35.7\%) is
+consistent with TSM block rewrites needed to accommodate out-of-sequence points.
 
 In absolute throughput, IoTDB still far leads under out-of-order conditions (1.87\,M vs.\
 255\,K pts/s for InfluxDB). Two dimensions must therefore be considered separately: absolute
@@ -169,18 +170,13 @@ disorder (TimescaleDB is most resilient with the smallest fractional penalty).
 \subsection{Read Performance}
 \label{sec:read-results}
 
-An important note on interpreting read throughput: the pts/s figure for a read test sums
-the point counts returned by all active query types. A range query returning hundreds of
-points per call will appear to have far higher pts/s than a latest-point query that returns
-exactly one point per call. These figures are therefore not comparable across read test types.
-\textbf{Latency} is used exclusively as the primary read comparison metric in this section.
-
-A methodological note relevant to all read comparisons: read tests run sequentially on the
-same dataset within a session, so later tests benefit from warmer OS page caches and
-in-memory database structures (see Section~\ref{sec:limitations}). Where warm-cache effects
-are the stated mechanism for a database's performance, such as TimescaleDB's
-\texttt{shared\_buffers} for downsampling, this is an expected and reproducible property
-under normal operating conditions, not an artefact.
+Read throughput in pts/s varies with the number of points returned per query, making
+that value incomparable across different read types. Latency is used as the primary
+metric in this section. It is also worth noting that read tests run sequentially
+on the same dataset, so later tests benefit from warmer OS page caches. When that
+cache warm-up is itself the mechanism behind a database's performance, as with
+TimescaleDB's \texttt{shared\_buffers} in downsampling, the result is expected and
+reproducible in production (see Section~\ref{sec:limitations}).
 
 \subsubsection{Latest-Point Queries}
 
@@ -204,11 +200,10 @@ tuned runs.
 
 TimescaleDB and IoTDB maintain sub-millisecond or near-sub-millisecond latency across
 a hundredfold increase in data volume. Both exploit database-specific shortcuts for last-value retrieval.
-TimescaleDB executes a \texttt{SELECT~...~ORDER~BY~time~DESC~LIMIT~1} against the most
-recent hypertable chunk via a reverse B-tree scan; because hypertable chunks are ordered
-by time, this always touches the smallest possible amount of data. IoTDB maintains a
-dedicated in-memory last-value cache per series, serving the query entirely from RAM
-without accessing TsFile at all.
+TimescaleDB's behavior is consistent with its time-ordered hypertable partitioning~\citep{timescaledb},
+where latest-point queries need only access the most recent chunk,
+regardless of total stored volume. IoTDB maintains a dedicated in-memory last-value cache per series, serving
+the query entirely from RAM without accessing TsFile~\citep{iotdblastquery}.
 
 InfluxDB has no equivalent shortcut. It must seek to the tail of each series' TSM file
 blocks, and that seek cost grows as more TSM files accumulate over the dataset lifetime.
@@ -248,17 +243,15 @@ Table~\ref{tab:downsample} shows GROUP~BY time-bucket downsampling latency.
 \end{table}
 
 TimescaleDB's \texttt{time\_bucket()} aggregation stays below 1\,ms across a hundredfold
-increase in data volume, a result that holds consistently across all tested scales. The key is that \texttt{time\_bucket()}
-queries scan a fixed time window rather than the full dataset: once the relevant chunks
-are warm in \texttt{shared\_buffers}, query cost is bounded by the window size, not by
-total stored data. This property makes TimescaleDB an excellent fit for dashboard workloads
-that consistently query recent time windows regardless of historical data accumulation.
+increase in data volume, a result that holds consistently across all tested scales. This result is consistent with TimescaleDB's hypertable chunk exclusion mechanism~\citep{timescaledb}, by which only chunks that overlap the queried
+time window are accessed, regardless of total stored volume. The warmed \texttt{shared\_buffers} in
+the tuned runs reinforces this behavior, keeping relevant chunks in memory.
+This combination makes TimescaleDB suitable for dashboard workloads that
+consistently query recent time windows.
 
 IoTDB's downsampling latency improves from small to medium scale (1.81\,ms $\to$ 0.64\,ms)
 as the longer medium-scale run gives the JVM JIT compiler time to optimise the chunk
-aggregation hot path. At large scale it remains under 1\,ms. InfluxDB's Flux aggregation
-engine incurs higher per-query overhead (5--9\,ms) from expression evaluation and operator
-pipeline costs.
+aggregation hot path~\citep{barrett2017warmup}. At large scale it remains under 1\,ms. InfluxDB incurs higher per-query overhead (5--9\,ms).
 
 \subsubsection{Value-Filter Queries}
 
@@ -285,7 +278,7 @@ Table~\ref{tab:vfilter} shows value-filter latency and its scaling behavior acro
   \end{tabular}
 \end{table*}
 
-IoTDB's advantage is large and \textit{improves} with scale. Each TsFile chunk stores
+IoTDB's advantage is large and improves with scale. Each TsFile chunk stores
 per-series min/max statistics. A value predicate can skip entire chunks whose stored range
 does not intersect the predicate threshold, providing lightweight secondary indexing at
 the storage layer. At large scale, with more data per chunk, a larger fraction of chunks
@@ -319,7 +312,7 @@ terms at large scale.
 Range queries retrieve all data points within a time window without value filtering.
 TimescaleDB is fastest here: 0.54\,ms at small scale and 0.66\,ms at large, benefiting
 from hypertable chunk pruning (only chunks overlapping the query window are opened) and the
-warm OS page cache that avoids disk I/O for frequently queried recent time windows. IoTDB
+warm OS page cache that avoids disk input/output for frequently queried recent time windows. IoTDB
 achieves 1.19--1.21\,ms and is effectively scale-insensitive within this data range.
 InfluxDB achieves 5.41--8.68\,ms, where the TSM block scanner bears higher per-file
 overhead than TimescaleDB's chunk-level sequential scan.
@@ -330,29 +323,32 @@ overhead than TimescaleDB's chunk-level sequential scan.
 Memory measurements require careful interpretation because the original shared-start
 benchmark runs produced substantially inflated figures through a methodological artefact.
 
-\textbf{TimescaleDB} reported approximately 5.4\,GB from the very first test in the
-original runs. This was not PostgreSQL's buffer pool usage; it was accumulated OS page
-cache from IoTDB's preceding write sessions. Linux accounts for file-system page cache
+\subsubsection{TimescaleDB}
+
+TimescaleDB reported approximately 5.4\,GB from the very first test in the
+original runs. This was not due to PostgreSQL's buffer pool, but rather to the operating system's page cache, which had been accumulated during IoTDB's preceding write sessions. Linux accounts for file-system page cache
 toward a container's RSS in \texttt{docker stats}, and the idle TimescaleDB container
-had been running for hours while IoTDB generated gigabytes of I/O. In the tuned
+had been running for hours while IoTDB generated gigabytes of input/output. In the tuned
 sequential runs, TimescaleDB starts at 239\,MB and grows to approximately 1.8\,GB
 after the write tests warm \texttt{shared\_buffers}. The 1.8\,GB figure is the
 accurate operational footprint for this dataset size under the tuned configuration.
 
-\textbf{IoTDB} reported approximately 12.5\,GB flat throughout the original runs.
-During the hours it spent idle while InfluxDB and TimescaleDB were tested, its JVM
-speculatively pre-allocated the configured maximum heap in anticipation of future load.
-In the tuned runs the JVM starts at 1.7\,GB and grows organically to approximately
-10\,GB by the end of the read phase, reflecting actual working-set demand per workload
-phase rather than speculative reservation.
+\subsubsection{IoTDB}
 
-\textbf{InfluxDB} is the most memory-efficient across write workloads: 190--940\,MB in
+IoTDB reported approximately 12.5\,GB flat throughout the original runs.
+During the hours it spent idle while InfluxDB and TimescaleDB were tested, the JVM
+expanded the heap up near the configured maximum and did not return those pages to the OS,
+which is standard behavior of the JVM heap manager. In the tuned runs, the JVM starts
+at 1.7\,GB and grows to approximately
+10\,GB by the end of the read phase, reflecting actual working-set demand per workload
+phase.
+
+\subsubsection{InfluxDB}
+
+InfluxDB is the most memory-efficient across write workloads: 190--940\,MB in
 tuned write tests at small scale. However, this advantage does not hold unconditionally.
 At large scale, BATCH-LARGE peaks at 2.9\,GB as the TSM write cache holds large volumes
-of pending batches alongside concurrent compaction buffers. The commonly cited claim that
-InfluxDB's memory is ``capped at 1\,GB by default'' describes only the TSM cache ceiling;
-total process RSS includes the series index, WAL buffers, and Go runtime overhead that
-together can substantially exceed that limit under high write load.
+of pending batches alongside concurrent compaction buffers. The default 1\,GB limit in InfluxDB applies only to the TSM cache ceiling. Total process RSS includes the series index, WAL buffers, and Go runtime overhead, components that together can exceed that limit under high write load.
 
 The practical implication for deployment planning is that IoTDB's dominant write throughput
 requires a substantial memory commitment ($\sim$10\,GB at medium scale, growing to $\sim$15\,GB
@@ -403,18 +399,19 @@ in the tuned runs.
 \end{table}
 
 IoTDB's write throughput scales superlinearly: 2.2\,M pts/s at small, 8.0\,M at medium,
-23.6\,M at large. This is driven by JVM JIT compilation: short benchmarks do not give the
-JIT sufficient time to fully optimise all hot paths. At medium and large scale the longer
-runs allow the JIT to reach peak compilation, saturating the Thrift write path. Small-scale
-IoTDB write numbers therefore understate its steady-state ceiling; the large-scale figure
+23.6\,M at large. This growth is consistent with the JVM JIT compilation warm-up effect:
+short benchmarks do not give the
+JIT sufficient time to fully optimise all hot paths~\citep{barrett2017warmup}. At medium and large scale the longer
+runs would allow the JIT to reach peak compilation, saturating the Thrift write path. Small-scale
+IoTDB write numbers therefore likely understate its steady-state ceiling; the large-scale figure
 is the most representative of sustained production throughput.
 
-InfluxDB remains roughly constant between small and medium (WAL and TSM compaction are
-the bottleneck regardless of dataset size) but improves markedly at large scale as
-larger write volumes allow the TSM compaction engine to amortize its overhead more efficiently.
-TimescaleDB shows a similar pattern: flat from small to medium, then improving at large
-scale as the longer run allows more checkpoint intervals and larger individual batches to
-accumulate.
+InfluxDB remains roughly constant between small and medium, a pattern suggestive of
+saturation by WAL and TSM compaction regardless of volume. At large
+scale, the observed gain is consistent with amortization of compaction overhead over larger volumes.
+TimescaleDB shows a similar pattern: flat from small to medium,
+then improving at large scale, suggestive of better use of checkpoint intervals
+with longer runs.
 
 \begin{figure}[ht]
   \centering
@@ -429,20 +426,19 @@ accumulate.
 
 IoTDB's \texttt{batch-small} throughput across scales (28\,K $\to$ 81\,K $\to$ 446\,K pts/s)
 is one of the clearest demonstrations of JIT-driven scaling in the dataset. Average latency
-simultaneously \textit{decreases} from 1.22\,ms to 0.40\,ms as scale increases, which is
+simultaneously decreases from 1.22\,ms to 0.40\,ms as scale increases, which is
 only possible if the improvement comes from code optimization rather than reduced load.
 The large-scale figure (446\,K pts/s, 0.40\,ms average latency) represents IoTDB's
 steady-state single-point ingestion throughput once the JIT has fully compiled the
-Thrift serialisation hot path.
+Thrift serialisation hot path~\citep{barrett2017warmup}.
 
 \subsubsection{TimescaleDB BATCH-LARGE Timeout}
 
 TimescaleDB's \texttt{batch-large} test hits the 3{,}600-second benchmark timeout at large
 scale in both the original and tuned runs. With 50 devices and a batch size of 1{,}000 rows,
 each write request touches 50 hypertable partitions simultaneously and triggers up to 50
-concurrent WAL flushes. The cumulative I/O cost exhausts the time budget before the full
-loop count completes. This is not a pathological edge case but a foreseeable consequence of
-hypertable partition fan-out under large-batch high-concurrency writes. For bulk-loading
+concurrent WAL flushes. The cumulative input/output cost exhausts the time budget before the full
+loop count completes. This does not represent an anomaly; it is the expected outcome of partition fan-out in the hypertable under high-concurrency, high-volume write scenarios. For bulk-loading
 workloads targeting TimescaleDB at scale, the partition count must be weighed against the
 WAL flush amplification.
 
@@ -452,10 +448,10 @@ Among the multi-scale trends, InfluxDB's latest-point latency progression (9.24 
 21.72 $\to$ 23.24\,ms) deserves particular attention because it reveals a structural
 scalability issue. Every incremental TSM file written to disk adds to the seek depth
 that a latest-point query must traverse. TimescaleDB and IoTDB show flat or even
-\textit{decreasing} latest-point latency (due to JIT warm-up for IoTDB) across the
-same hundredfold increase in data volume. Any deployment that will accumulate months or years of
+decreasing latest-point latency (due to IoTDB's in-memory cache~\citep{iotdblastquery} and JIT warm-up~\citep{barrett2017warmup})
+across the same hundredfold increase in data volume. Any deployment that will accumulate months or years of
 data will see InfluxDB's latest-point cost continue to grow, while TimescaleDB's
-and IoTDB's costs remain bounded.
+and IoTDB's costs remain optimized.
 
 \subsection{Impact of Configuration Tuning}
 \label{sec:tuning-results}
@@ -477,17 +473,14 @@ pgtune at small scale.
     WRITE        & 133{,}677 & 174{,}787 & $+$30\% & $-$25\% \\
     BATCH-LARGE  & 160{,}546 & 214{,}927 & $+$34\% & $-$25\% \\
     OUT-OF-ORDER & 132{,}189 & 160{,}121 & $+$21\% & $-$21\% \\
-    VALUE-FILTER & (latency) & (latency) & ---     & $-$40\% \\
-    READ         & (latency) & (latency) & ---     & $-$38\% \\
     \hline
   \end{tabular}
 \end{table*}
 
 The primary driver is \texttt{shared\_buffers=8GB}, which provides PostgreSQL a large
-enough buffer pool to avoid buffer evictions that force extra WAL writes.
-\texttt{work\_mem=27413kB} eliminates disk spills for sort-based predicate evaluation,
-explaining the 40\% reduction in value-filter latency, a workload that requires sorting
-filtered results. \texttt{checkpoint\_completion\_target=0.9} spreads checkpoint I/O more
+enough buffer pool to avoid buffer replacement that would force extra WAL writes.
+\texttt{work\_mem=27413kB} eliminates disk writes during sort-based filtering, which explains the 40\% reduction in value-filter latency -- a workload that requires sorting filtered results.
+\texttt{checkpoint\_completion\_target=0.9} spreads checkpoint input/output more
 evenly across the checkpoint interval, reducing the write stall spikes that inflate P99
 latency (BATCH-LARGE P99 dropped from 1{,}069\,ms to 812\,ms). These improvements
 indicate that default PostgreSQL settings are intentionally conservative to ensure
@@ -500,10 +493,10 @@ InfluxDB received no configuration changes in the tuned runs. Its improvements c
 from running without competing databases. All read latencies improved 15--21\%, consistent
 with better TSM file cache utilization once TimescaleDB's page cache no longer competes for
 OS buffer space. The most dramatic result was BATCH-LARGE P99: 205\,ms $\to$ 60\,ms
-($-$71\%). In the original setup, TimescaleDB was writing aggressively to disk during
-InfluxDB's test session, periodically starving InfluxDB's TSM compaction engine of I/O
-bandwidth. These rare but severe I/O stalls produced extreme latency outliers that did not
-affect average throughput but inflated P99 dramatically. Isolation removed these stalls.
+($-$71\%). In the original setup, TimescaleDB was writing to disk during
+InfluxDB's test session, periodically starving InfluxDB's TSM compaction engine of input/output
+bandwidth. These rare but severe input/output stalls produced extreme latency spikes that, while not
+affecting average throughput, considerably inflated P99. Isolation removed these stalls.
 
 \subsubsection{Correcting Two Large-Scale False Positives}
 
@@ -512,20 +505,17 @@ The original large-scale runs produced two findings that the tuned reruns revers
 \textbf{TimescaleDB out-of-order penalty.} The original large-scale run showed a 23\%
 OOO throughput penalty for TimescaleDB, attributed to decompression-recompression cycles
 from out-of-order inserts into older compressed chunks. The tuned rerun shows only 2.7\%
-degradation, consistent with the pattern at small and medium scale. The mechanism:
-out-of-order inserts into older chunks require reading those chunks from disk to decompress
-them. In the original shared-start session, IoTDB's expanding JVM heap (15+ GB) had evicted
-the OS page cache pages holding those chunks, forcing cold disk reads for every OOO insert
-into an older chunk. With exclusive access, the chunks remain warm in cache and decompression
-costs are negligible.
+degradation, consistent with the pattern at small and medium scale. The most likely hypothesis: out-of-order inserts into older chunks require reading
+from disk for decompression. In the original shared-start session, IoTDB's expanding JVM heap (above
+15\,GB) likely displaced the OS page cache pages holding those chunks, forcing cold reads
+on every OOO insert into an older chunk. With exclusive access, the chunks would
+remain warm in cache and decompression costs would be negligible.
 
 \textbf{TimescaleDB CPU saturation.} The original READ workload at large scale averaged
 97.7\% CPU utilization with a P99 latency of 4{,}232\,ms, leading to the conclusion that
 TimescaleDB ``runs out of compute'' and could not be improved without a stronger CPU or
 horizontal sharding. The tuned rerun shows 77.4\% average CPU and 1{,}850\,ms P99.
-The original 97.7\% figure was the result of all three databases and the Java benchmark
-client simultaneously competing for the same six CPU cores. TimescaleDB was not at a
-hardware ceiling: it was CPU-starved by competing processes.
+The original 97.7\% figure resulted from all three databases and the benchmark client simultaneously competing for the same six CPU cores. TimescaleDB's performance was therefore not limited by the hardware's physical capacity, but by excessive processing contention caused by concurrent processes.
 
 These two reversals underscore the importance of isolated, correctly-tuned benchmark
 methodology. Without sequential container lifecycles and standard database configuration,
@@ -552,10 +542,9 @@ query results presented above: TimescaleDB dominates for time-windowed queries, 
 constitute the majority of the ten types, while IoTDB's advantage on value-filter queries
 is diluted by the equal weighting.
 
-The mixed workload's primary analytical role in this study is as a tuning benchmark
-(Table~\ref{tab:tsdb-tuning}): TimescaleDB's READ latency improved 38\% after pgtune,
-confirming that multiple query types, not only value-filter, benefit from a correctly
-sized buffer pool.
+The mixed workload's primary analytical role in this study is as a tuning benchmark:
+TimescaleDB's read latency improved 38\% after pgtune, confirming that multiple
+query types benefit from a correctly sized buffer pool, not only the value-filter.
 
 \subsection{Summary}
 \label{sec:results-summary}

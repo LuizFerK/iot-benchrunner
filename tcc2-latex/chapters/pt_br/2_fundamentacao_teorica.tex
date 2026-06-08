@@ -86,7 +86,7 @@ com a integração de bancos de dados heterogêneos e autônomos.
 
 Um benefício fundamental dos BDDs é o desempenho melhorado por meio da localidade de dados e
 do paralelismo. Como observam~\cite{Ozsu2011}, armazenar dados próximos aos seus pontos de uso
-reduz a contenção de CPU e E/S, enquanto o paralelismo pode ser explorado tanto entre consultas
+reduz a contenção de CPU e entrada/saída, enquanto o paralelismo pode ser explorado tanto entre consultas
 (interqueries) quanto dentro de uma única consulta (intraquery). No entanto, isso traz desafios:
 consistência da replicação, sincronização de transações distribuídas e detecção de deadlock
 distribuído, como destacado por~\cite{Ozsu2011} e~\cite{Silberschatz2020}. O objetivo mais
@@ -183,11 +183,8 @@ ordenados com estatísticas de mínimo/máximo por bloco. As escritas são prime
 um buffer em memória (memtable) gerenciado pela JVM e descarregadas para segmentos TsFile
 de forma assíncrona. Essa estratégia de escrita diferida é similar a uma abordagem de
 Log-Structured Merge Tree (LSM)~\citep{oneil1996lsm}, trocando garantias estritas de durabilidade por alta vazão
-de escrita. A interface de ingestão nativa é um protocolo binário Thrift RPC
-(SESSION\_BY\_TABLET), que submete tablets colunares tipados diretamente no buffer de escrita
-com sobrecarga mínima. As estatísticas de mínimo/máximo armazenadas por bloco permitem a
-eliminação antecipada de blocos que não correspondem ao predicado durante consultas de filtro
-de valor, uma propriedade que se torna cada vez mais vantajosa à medida que o conjunto de
+de escrita. A interface de ingestão nativa é um protocolo binário Thrift RPC (Session API), que submete
+tablets colunares tipados diretamente no buffer de escrita com sobrecarga mínima. As estatísticas de mínimo/máximo armazenadas por bloco permitem a eliminação antecipada de blocos incompatíveis durante consultas de filtro de valor, uma propriedade que se torna cada vez mais vantajosa à medida que o conjunto de
 dados cresce~\citep{wang2023iotdb}.
 
 \textbf{InfluxDB}~\cite{naqvi2017influxdb} usa um motor de armazenamento Time-Structured Merge
@@ -201,7 +198,7 @@ pela sobrecarga do runtime Go~\citep{naqvi2017influxdb}.
 
 \textbf{TimescaleDB} estende o PostgreSQL com otimizações para séries temporais~\citep{timescaledb}.
 Sua estrutura de dados primária é a \textit{hipertabela}: uma tabela lógica que é
-automaticamente particionada em \textit{blocos} físicos por intervalo de tempo. Consultas que
+automaticamente particionada em blocos físicos por intervalo de tempo. Consultas que
 especificam um intervalo de tempo podem eliminar blocos automaticamente, tocando apenas as
 partições relevantes. A função \texttt{time\_bucket()} fornece subamostragem nativa com
 agregação por push-down. Como extensão do PostgreSQL, o TimescaleDB herda sua pilha de
@@ -230,9 +227,9 @@ distintos. Essa diversidade de abordagens e otimizações específicas torna a c
 difícil sem instrumentos padronizados.
 
 Quanto às características fundamentais de um bom benchmark,~\cite{Ramakrishnan2003} enumeram
-três qualidades essenciais. Primeiro, \textit{portabilidade}: a capacidade de executar o
-benchmark em diferentes plataformas e sistemas. Segundo, \textit{clareza}: garantir fácil
-compreensão do que está sendo realmente medido. Terceiro, \textit{escalabilidade}: a adaptação
+três qualidades essenciais. Primeiro, portabilidade: a capacidade de executar o
+benchmark em diferentes plataformas e sistemas. Segundo, clareza: garantir fácil
+compreensão do que está sendo realmente medido. Terceiro, escalabilidade: a adaptação
 natural a instâncias maiores do problema. Além desses atributos básicos, bons benchmarks devem
 medir tanto o desempenho máximo (expresso em métricas como transações por segundo) quanto a
 relação custo-eficácia (dólares por transação por segundo) para cargas de trabalho típicas de
@@ -246,13 +243,13 @@ tempo total para uma carga de trabalho mista e derivar a vazão média a partir 
 média harmônica, que reflete melhor a realidade quando há diferentes tipos de operações.
 
 A literatura de benchmarks categoriza seus instrumentos em vários grupos~\citep{Ramakrishnan2003}.
-Os benchmarks de \textit{Processamento de Transações Online} (TPC-A, TPC-B, TPC-C) definem
+Os benchmarks de Processamento de Transações Online (TPC-A, TPC-B, TPC-C) definem
 medidas padrão de transações por segundo e custo por transação. O TPC-C, o mais amplamente
 utilizado, modela um ambiente complexo de armazém com cinco tipos de transação, exercitando uma
 gama muito mais ampla de capacidades do sistema do que seus predecessores. Os benchmarks de
-\textit{desempenho de consultas} (Wisconsin, AS3AP, TPC-D) avaliam o desempenho de consultas
-relacionais, de simples a complexas para suporte a decisões. Os benchmarks de \textit{banco de
-dados orientado a objetos} (001, 007, Bucky) medem sistemas orientados a objetos e
+desempenho de consultas (Wisconsin, AS3AP, TPC-D) avaliam o desempenho de consultas
+relacionais, de simples a complexas para suporte a decisões. Os benchmarks de banco de
+dados orientado a objetos (001, 007, Bucky) medem sistemas orientados a objetos e
 objeto-relacionais.
 
 Para aplicação prática, os benchmarks devem ser interpretados com cuidado.
@@ -265,6 +262,14 @@ críticas da aplicação pretendida; e, quando os benchmarks padrão não corres
 suficientemente à carga de trabalho real, benchmarks personalizados que adaptem ou substituam
 tarefas padrão por operações mais representativas devem ser considerados.
 
+\cite{shapira2016pitfalls} catalogam cinco armadilhas recorrentes em benchmarks de sistemas de
+big data: comparar configurações que diferem em múltiplos parâmetros simultaneamente, testar
+em escala insuficiente e extrapolar os resultados, aceitar resultados suspeitos sem questionar
+sua origem, usar cargas de trabalho artificiais desconectadas do uso real, e comunicar
+resultados de forma incompleta ou enganosa. Essas armadilhas são particularmente relevantes
+para benchmarks de bancos de dados de séries temporais, onde diferenças de configuração,
+isolamento de recursos e escolha de carga de trabalho podem inverter conclusões.
+
 A reprodutibilidade é uma propriedade essencial, mas frequentemente negligenciada, dos benchmarks
 de banco de dados. Como observado nos seis estudos de desempenho revisados neste trabalho, apenas um
 fornece os scripts e configurações exatas necessárias para replicação
@@ -274,5 +279,5 @@ uma lacuna que este estudo aborda diretamente por meio de sua infraestrutura de 
 totalmente automatizada e publicamente disponível.
 Além do compartilhamento de código, o isolamento de recursos entre os sistemas avaliados é
 igualmente crítico: executar múltiplos motores de banco de dados simultaneamente no mesmo
-hardware introduz artefatos de contenção de cache de páginas e E/S que podem inverter
+hardware introduz artefatos de contenção de cache de páginas e entrada/saída que podem inverter
 conclusões reportadas~\citep{shapira2016pitfalls}.

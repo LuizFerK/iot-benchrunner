@@ -89,20 +89,28 @@ and constrained memory, InfluxDB provides the most balanced profile.
 
 The following limitations bound the conclusions of this study:
 
-\textbf{Single-node deployment.} All databases ran on one host, eliminating real network
+\subsubsection{Single-Node Deployment}
+
+All databases ran on one host, eliminating real network
 latency. InfluxDB's HTTP line-protocol incurs meaningful round-trip overhead in distributed
 deployments that near-zero loopback latency does not capture.
 
-\textbf{Sequential read tests.} Read workloads run sequentially on the same dataset within
+\subsubsection{Sequential Read Tests}
+
+Read workloads run sequentially on the same dataset within
 a session. Later tests benefit from warmer OS page cache and in-memory database structures.
 Production-quality isolation would flush caches and restart the database between read tests.
 
-\textbf{IoTDB deferred durability.} IoTDB's write throughput reflects in-memory
+\subsubsection{IoTDB Deferred Durability}
+
+IoTDB's write throughput reflects in-memory
 acknowledgement before disk persistence. Deployments with strict durability requirements
 would need to configure synchronous WAL mode, which may reduce throughput.
 
-\textbf{JVM warm-up.} IoTDB's read and single-point write performance improves significantly
-over the duration of a session as JIT compilation optimises hot paths. Short benchmarks
+\subsubsection{JVM Warm-Up}
+
+IoTDB's read and single-point write performance improves significantly
+over the duration of a session as JIT compilation optimises hot paths~\citep{barrett2017warmup}. Short benchmarks
 understate steady-state throughput. The large-scale figures are the most representative of
 production IoTDB behavior.
 

@@ -15,10 +15,10 @@ relevant information about the algorithms underlying TSDB implementations, despi
 directly focused on comparative evaluation.
 
 From the initial reading, seven works were selected for detailed study. This chapter is organized
-in three sections. The \textit{Functionality Analysis} section covers works that evaluate
-technical and operational characteristics of TSDB systems. The \textit{Performance Analysis}
-section covers comparative benchmark studies. The \textit{Comparative Analysis} section
-synthesizes and critiques all selected works through a comparative table, highlighting patterns,
+in three sections. The Functionality Analysis section covers works that evaluate
+technical and operational characteristics of TSDB systems. The Performance Analysis
+section covers comparative benchmark studies. The Comparative Analysis
+section synthesizes and critiques all selected works through a comparative table, highlighting patterns,
 gaps, and trends identified in the literature.
 
 \subsection{Functionality Analysis}
@@ -130,7 +130,9 @@ particular density in 2023, reflecting growing interest in TSDB evaluation. The 
 studies from 2017 highlights that this is not a newly emerging concern, yet the rapid evolution
 of the databases themselves means that older findings may no longer apply to current versions.
 
-\textbf{Database coverage.} InfluxDB is present in every reviewed study, serving as the de
+\subsubsection{Database Coverage}
+
+InfluxDB is present in every reviewed study, serving as the de
 facto reference point for TSDB comparisons, even in works where another system is the
 primary subject, as in~\cite{wang2023iotdb}. The presence of TimescaleDB in four of six
 studies reflects its growing relevance as a SQL-compatible alternative. The most notable
@@ -139,7 +141,9 @@ trend is the emergence of Apache IoTDB: appearing only in the two most recent st
 toward IoT workloads, or growing recognition of its strengths for this domain; the
 available data do not allow distinguishing among these explanations.
 
-\textbf{Reproducibility.} This is the most significant methodological gap in the reviewed
+\subsubsection{Reproducibility}
+
+This is the most significant methodological gap in the reviewed
 literature. Of six performance studies, only one, \cite{pereira2023mulletbench},
 is fully reproducible, with all code and configurations publicly available on GitHub.
 Two studies (\cite{lima2024avaliando} and \cite{wang2023iotdb}) offer partial reproducibility
@@ -148,21 +152,27 @@ through Docker containers or described configurations, while the remaining two
 This limits independent validation of results and makes it difficult to attribute performance
 differences to database architecture rather than experimental conditions.
 
-\textbf{Datasets.} All six studies use synthetic datasets, reflecting the need for
+\subsubsection{Datasets}
+
+All six studies use synthetic datasets, reflecting the need for
 controlled, volume-scalable data. Three studies additionally include real datasets such as
 NYC Taxi data, IoT sensor readings, and industrial vehicle data~\citep{shah2022performance,
 naqvi2017influxdb,wang2023iotdb}, providing practical relevance alongside experimental
 control. The TSBS (Time Series Benchmark Suite) appears in the most recent studies,
 suggesting a potential standardization trend in the community.
 
-\textbf{Hardware configurations.} Tested environments vary considerably: processors range
+\subsubsection{Hardware Configurations}
+
+Tested environments vary considerably: processors range
 from Intel~i3 to Intel~i7, RAM from 8\,GB to 32\,GB (plus cloud with 256\,GB in one
 case~\citep{wang2023iotdb}), and storage from SATA SSD to NVMe and HDD. The majority of
 tests used mid-range machines, consistent with a focus on realistic deployment scenarios.
 The inclusion of cloud testing in more recent studies~\citep{pereira2023mulletbench,wang2023iotdb}
 reflects growing interest in edge-to-cloud architectures.
 
-\textbf{Outcome trends.} InfluxDB leads in three of six studies (2017, 2022, and 2024).
+\subsubsection{Outcome Trends}
+
+InfluxDB leads in three of six studies (2017, 2022, and 2024).
 Apache IoTDB leads in both 2023 studies. PostgreSQL leads in the edge-computing
 study~\citep{grzesik2020comparative}, a result attributable to the constrained Raspberry~Pi
 hardware rather than general TSDB performance characteristics. The temporal pattern among

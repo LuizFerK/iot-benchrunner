@@ -74,7 +74,7 @@ communicate directly. Multi-database systems deal with integrating heterogeneous
 autonomous databases.
 
 A key benefit of DDBs is improved performance through data locality and parallelism. As~\cite{Ozsu2011}
-note, storing data near its points of use reduces CPU and I/O contention, while parallelism
+note, storing data near its points of use reduces CPU and input/output contention, while parallelism
 can be exploited both across queries (inter-query) and within a single query (intra-query).
 However, this comes with challenges: replication consistency, distributed transaction
 synchronization, and distributed deadlock detection, as highlighted by both~\cite{Ozsu2011}
@@ -162,10 +162,8 @@ a custom columnar file format that stores data in sorted chunks with per-chunk m
 Writes are first absorbed into an in-memory buffer (memtable) managed by the JVM, and are
 flushed to TsFile segments asynchronously. This deferred write strategy is similar to a
 Log-Structured Merge Tree (LSM) approach~\citep{oneil1996lsm}, trading strict durability guarantees for high
-write throughput. The native ingestion interface is a binary Thrift RPC protocol
-(SESSION\_BY\_TABLET), which submits typed columnar tablets directly into the write buffer
-with minimal overhead. The min/max statistics stored per chunk enable early pruning of
-non-matching blocks during value-predicate queries, a property that becomes increasingly
+write throughput. The native ingestion interface is a binary Thrift RPC protocol (Session API), which submits
+typed columnar tablets directly into the write buffer with minimal overhead. The min/max statistics stored per chunk enable early pruning of non-matching blocks during value-predicate queries, a property that becomes increasingly
 advantageous as the dataset grows~\citep{wang2023iotdb}.
 
 \textbf{InfluxDB}~\cite{naqvi2017influxdb} uses a Time-Structured Merge Tree (TSM) storage
@@ -178,7 +176,7 @@ memory is dominated by the TSM cache, the series index, and Go runtime overhead~
 
 \textbf{TimescaleDB} extends PostgreSQL with time-series optimizations~\citep{timescaledb}.
 Its primary data structure is the \textit{hypertable}: a logical table that is automatically
-partitioned into physical \textit{chunks} by time interval. Queries that specify a time range
+partitioned into physical chunks by time interval. Queries that specify a time range
 can prune chunks automatically, touching only the relevant partitions. The \texttt{time\_bucket()}
 function provides native downsampling with push-down aggregation. As a PostgreSQL extension,
 TimescaleDB inherits its full storage stack: all writes go through the Write-Ahead Log (WAL)
@@ -204,9 +202,9 @@ systems or choosing different architectural designs. This diversity of approache
 specific optimizations makes direct comparison difficult without standardized instruments.
 
 Regarding the fundamental characteristics of a good benchmark,~\cite{Ramakrishnan2003} enumerate
-three essential qualities. First, \textit{portability}: the ability to run the benchmark on
-different platforms and systems. Second, \textit{clarity}: ensuring easy understanding of what
-is actually being measured. Third, \textit{scalability}: the natural adaptation to larger
+three essential qualities. First, portability: the ability to run the benchmark on
+different platforms and systems. Second, clarity: ensuring easy understanding of what
+is actually being measured. Third, scalability: the natural adaptation to larger
 problem instances. Beyond these basic attributes, good benchmarks should measure both maximum
 performance (expressed in metrics such as transactions per second) and cost-effectiveness
 (dollars per transaction per second) for workloads typical of a specific application domain.
@@ -219,12 +217,12 @@ total time for a mixed workload and derive the average throughput from that, or 
 harmonic mean, which better reflects the reality when there are different types of operations.
 
 The benchmark literature categorizes its instruments in several groups~\citep{Ramakrishnan2003}.
-\textit{Online Transaction Processing} benchmarks (TPC-A, TPC-B, TPC-C) define standard
+Online Transaction Processing benchmarks (TPC-A, TPC-B, TPC-C) define standard
 measures for transactions per second and cost per transaction. TPC-C, the most widely used,
 models a complex warehouse environment with five transaction types, exercising a much broader
-range of system capabilities than its predecessors. \textit{Query performance} benchmarks
+range of system capabilities than its predecessors. Query performance benchmarks
 (Wisconsin, AS3AP, TPC-D) evaluate relational query performance from simple to complex
-decision-support workloads. \textit{Object database} benchmarks (001, 007, Bucky) measure
+decision-support workloads. Object database benchmarks (001, 007, Bucky) measure
 object-oriented and object-relational systems.
 
 For practical application, benchmarks must be interpreted carefully.
@@ -236,6 +234,14 @@ resemble the critical operations of the intended application; and when standard 
 do not match the actual workload closely enough, custom benchmarks that adapt or replace
 standard tasks with more representative operations should be considered.
 
+\cite{shapira2016pitfalls} catalog five recurring pitfalls in big data system benchmarks:
+comparing configurations that differ in multiple parameters simultaneously, testing at
+insufficient scale and extrapolating results, accepting suspicious results without questioning
+their origin, using artificial workloads disconnected from real usage, and reporting results
+incompletely or misleadingly. These pitfalls are particularly relevant for time series database
+benchmarks, where configuration differences, resource isolation, and workload choice can
+reverse conclusions.
+
 Reproducibility is an essential but often neglected property of database benchmarks.
 Among the six performance studies reviewed in this work, only one provides the scripts
 and exact configurations needed for independent
@@ -243,5 +249,5 @@ replication~\citep{pereira2023mulletbench}. This limits the ability to validate 
 compare findings across studies, and build on prior work, a gap this study directly
 addresses through its fully scripted and publicly available benchmark infrastructure.
 Beyond code sharing, resource isolation between benchmark systems is equally critical:
-running multiple database engines on shared hardware introduces page-cache and I/O
+running multiple database engines on shared hardware introduces page-cache and input/output
 contention artefacts that can reverse reported conclusions~\citep{shapira2016pitfalls}.
