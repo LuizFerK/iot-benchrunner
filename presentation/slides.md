@@ -1,4 +1,4 @@
-# Um Benchmark Reprodutível do Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
+# Uma Análise Comparativa Reprodutível de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
 
 Slides para defesa do TCC2 — 20 a 30 minutos
 Formato sugerido: Marp / Reveal.js / PowerPoint
@@ -10,7 +10,7 @@ Deisgns em: https://getdesign.md/
 ## Slide 1 — Capa
 *[~1 min]*
 
-**Título:** Um Benchmark Reprodutível do Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
+**Título:** Uma Análise Comparativa Reprodutível de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
 
 - Luiz Fernando Klein
 - Curso de Ciência da Computação — UFFS
@@ -264,7 +264,7 @@ python3 benchmark.py --scale large
 ## Slide 20 — Obrigado
 *[Perguntas]*
 
-**Um Benchmark Reprodutível do Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT**
+**Uma Análise Comparativa Reprodutível de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT**
 
 Luiz Fernando Klein — UFFS, 2026
 

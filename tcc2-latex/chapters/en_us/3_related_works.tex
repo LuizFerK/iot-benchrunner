@@ -14,7 +14,7 @@ of datasets applicable to time series database analyses. \cite{Gaber2005Mining} 
 relevant information about the algorithms underlying TSDB implementations, despite not being
 directly focused on comparative evaluation.
 
-From the initial reading, seven works were selected for detailed study. This chapter is organized
+From the initial reading, seven works were selected for detailed study. Based on these works, a characterisation of three lines of work was made: (i) Functionality, (ii) Performance, and (iii) Comparative. This chapter is organized
 in three sections. The Functionality Analysis section covers works that evaluate
 technical and operational characteristics of TSDB systems. The Performance Analysis
 section covers comparative benchmark studies. The Comparative Analysis
@@ -74,7 +74,7 @@ inserts (groups of~10) and three aggregation query scenarios executed 5{,}000 ti
 using 28{,}800 synthetic sensor readings (temperature, pressure, humidity, and air-quality
 metrics from 10 simulated sensors over a 24-hour window). PostgreSQL was the fastest system
 for both insert and query workloads under these hardware constraints; InfluxDB showed the
-largest relative gain from batching (8.65$\times$ throughput improvement). TimescaleDB and
+largest relative gain from batching (8.65 times throughput improvement). TimescaleDB and
 InfluxDB were highlighted as more practical choices when native time-series features such as
 retention policies and continuous aggregates are required in production edge deployments.
 Reproducibility was classified as non-existent, with no scripts or configurations published.
@@ -182,7 +182,7 @@ IoT-specific workloads where IoTDB's native data model provides a structural adv
 The shift does not necessarily invalidate InfluxDB for other workloads; it does, however,
 motivate the inclusion of both databases in any contemporary comparative evaluation.
 
-In summary, the reviewed literature reveals three key gaps that the present work addresses:
+The reviewed literature reveals three key gaps that the present work addresses:
 (1) insufficient reproducibility: only one of six studies is fully replicable; (2) limited
 coverage of IoTDB alongside InfluxDB and TimescaleDB in the same controlled benchmark; and
 (3) the absence of a systematic analysis of how methodology choices (resource isolation,

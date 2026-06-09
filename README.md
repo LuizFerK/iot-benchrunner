@@ -1,4 +1,4 @@
-# A Reproducible Benchmark of Apache IoTDB, InfluxDB, and TimescaleDB for IoT Workloads
+# A Reproducible Comparative Analysis of Apache IoTDB, InfluxDB, and TimescaleDB for IoT Workloads
 
 > Undergraduate thesis (TCC) project comparing three time-series databases — **Apache IoTDB**, **InfluxDB**, and **TimescaleDB** — across nine workload scenarios representative of real IoT deployments, presented for approval in the Computer Science program at Universidade Federal da Fronteira Sul (UFFS) in 2026.
 

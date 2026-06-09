@@ -140,7 +140,7 @@ scans that are highly efficient if data is stored appropriately in a time series
 The architecture of modern TSDBs has evolved considerably. \cite{Dunning2014} describe three
 main approaches to time series storage: (1) wide tables that store data point-by-point;
 (2) a hybrid design mixing wide tables with blob storage; and (3) direct blob insertion from
-a memory cache, which can achieve ingestion rates up to 1{,}000$\times$ faster than
+a memory cache, which can achieve ingestion rates up to 1,000 times faster than
 point-by-point approaches. TSDBs store multiple time series in such a way that queries
 retrieving data from one or a few series for a specific time interval are particularly
 efficient~\citep{Dunning2014}. This efficiency is achieved through storage strategies that group
@@ -247,7 +247,7 @@ Among the six performance studies reviewed in this work, only one provides the s
 and exact configurations needed for independent
 replication~\citep{pereira2023mulletbench}. This limits the ability to validate results,
 compare findings across studies, and build on prior work, a gap this study directly
-addresses through its fully scripted and publicly available benchmark infrastructure.
+addresses through its fully scripted and publicly available benchmark environment.
 Beyond code sharing, resource isolation between benchmark systems is equally critical:
 running multiple database engines on shared hardware introduces page-cache and input/output
 contention artefacts that can reverse reported conclusions~\citep{shapira2016pitfalls}.

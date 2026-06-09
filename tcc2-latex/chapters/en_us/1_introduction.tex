@@ -35,7 +35,7 @@ from the ground up to meet the unique demands of temporal data~\citep{InfluxData
 As argued by~\cite{naqvi2017influxdb}, traditional relational databases suffer from indexing
 inefficiencies and memory limitations when dealing with large volumes of temporal data, whereas
 TSDBs maintain high performance because they were built to treat time as their primary concern.
-Beyond raw throughput, TSDBs offer specialized compression mechanisms, time-interval data
+Beyond throughput, TSDBs offer specialized compression mechanisms, time-interval data
 co-location, and automatic retention policies that reduce operational costs, features that
 are important for IoT applications where continuous sensor measurements demand scalability
 and economical resource usage~\citep{Dunning2014}.
@@ -59,7 +59,7 @@ allow independent replication~\citep{pereira2023mulletbench,shah2022performance,
 Without reproducible methodology, findings cannot be independently validated, results are
 difficult to compare across studies, and experiments cannot be adapted to new hardware or
 software versions. This work directly addresses that gap by making the complete benchmark
-infrastructure (all orchestration scripts, container definitions, build environment, and
+environment (all orchestration scripts, container definitions, build environment, and
 parameterized benchmark clients) publicly available alongside the results.
 
 This paper presents a controlled, reproducible comparison of Apache IoTDB, InfluxDB~2.7,
@@ -80,7 +80,7 @@ The specific objectives of this work are:
     spanning a hundredfold range in data size;
   \item Identify the architectural mechanisms that explain the observed performance differences;
   \item Quantify the impact of benchmark methodology choices on reported results; and
-  \item Provide a reproducible benchmark infrastructure that enables future researchers to
+  \item Provide a reproducible benchmark environment that enables future researchers to
     independently validate and extend these results.
 \end{itemize}
 
@@ -90,7 +90,7 @@ time series databases, and benchmarking concepts.
 Section~\ref{sec:related} reviews related comparative studies and identifies the gaps that
 motivate this work.
 Section~\ref{sec:methodology} describes the benchmark methodology, workload design, and
-reproducible infrastructure.
+reproducible environment.
 Section~\ref{sec:experiments} presents and analyzes the experimental results.
 Section~\ref{sec:conclusion} concludes the paper with a final comparison and directions
 for future work.
