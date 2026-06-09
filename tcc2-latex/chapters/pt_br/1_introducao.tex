@@ -37,8 +37,8 @@ especializadas, arquitetadas desde a concepção para atender às demandas exclu
 temporais~\citep{InfluxDataTimeSeries}. Como argumentado por~\cite{naqvi2017influxdb}, os
 bancos de dados relacionais tradicionais sofrem de ineficiências de indexação e limitações de
 memória ao lidar com grandes volumes de dados temporais, enquanto os BDSTs mantêm alto
-desempenho por terem sido construídos com o tempo como preocupação central. Além da vazão
-bruta, os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
+desempenho por terem sido construídos com o tempo como preocupação central. Além da vazão,
+os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
 intervalos de tempo e políticas automáticas de retenção que reduzem os custos operacionais,
 recursos importantes para aplicações IoT onde medições contínuas de sensores demandam
 escalabilidade e uso econômico de recursos~\citep{Dunning2014}.
@@ -53,7 +53,7 @@ trabalho~\citep{naqvi2017influxdb,shah2022performance,lima2024avaliando,wang2023
 um motor de armazenamento Time-Structured Merge Tree (TSM) exposto via API HTTP com
 protocolo de linha. O \textit{TimescaleDB} estende o PostgreSQL com capacidades de séries
 temporais, oferecendo compatibilidade com SQL e o ecossistema
-relacional completo como contrapartida a uma menor vazão bruta de escrita. Cada abordagem
+relacional completo como contrapartida a uma menor vazão de escrita. Cada abordagem
 possui pontos fortes e fracos distintos que não são aparentes apenas a partir de descrições
 e exigem medições controladas sob cargas de trabalho IoT realistas.
 
@@ -63,8 +63,8 @@ dos benchmarks publicados não fornece scripts, configurações ou versões exat
 suficientes para permitir replicação independente~\citep{pereira2023mulletbench,shah2022performance,naqvi2017influxdb}.
 Sem metodologia reprodutível, os resultados não podem ser validados de forma independente,
 são difíceis de comparar entre estudos e os experimentos não podem ser adaptados a novos
-hardwares ou versões de software. Este trabalho aborda diretamente essa lacuna tornando a
-infraestrutura completa de benchmark (todos os scripts de orquestração, definições de
+hardwares ou versões de software. Este trabalho aborda diretamente essa lacuna tornando
+ambiente completo de benchmark (todos os scripts de orquestração, definições de
 contêineres, ambiente de construção e clientes de benchmark parametrizados)
 publicamente disponível junto com os resultados.
 
@@ -89,7 +89,7 @@ Os objetivos específicos deste trabalho são:
     observadas;
   \item Quantificar o impacto das escolhas metodológicas do benchmark nos resultados
     reportados; e
-  \item Fornecer uma infraestrutura de benchmark reprodutível que permita a pesquisadores
+  \item Fornecer um ambiente de benchmark reprodutível que permita a pesquisadores
     futuros validar e estender de forma independente estes resultados.
 \end{itemize}
 
@@ -99,7 +99,7 @@ bancos de dados de séries temporais e conceitos de benchmarking.
 A Seção~\ref{sec:related} revisa estudos comparativos relacionados e identifica as lacunas
 que motivam este trabalho.
 A Seção~\ref{sec:methodology} descreve a metodologia de benchmark, o projeto das cargas de
-trabalho e a infraestrutura reprodutível.
+trabalho e o ambiente reprodutível.
 A Seção~\ref{sec:experiments} apresenta e analisa os resultados experimentais.
 A Seção~\ref{sec:conclusion} conclui o artigo com uma comparação final e direções para
 trabalhos futuros.

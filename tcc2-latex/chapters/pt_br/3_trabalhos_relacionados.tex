@@ -15,7 +15,7 @@ temporais. \cite{Gaber2005Mining} contribuiu com informações relevantes sobre 
 subjacentes às implementações de BDSTs, apesar de não estar diretamente focado em avaliação
 comparativa.
 
-Da leitura inicial, sete trabalhos foram selecionados para estudo detalhado. Este capítulo está
+Da leitura inicial, sete trabalhos foram selecionados para estudo detalhado. Com base nestes trabalhos, foi feita uma caracterização de 3 linhas de trabalho: (i) Funcionalidades, (ii) Desempenho e (iii) Comparativa. Desta forma este capítulo está
 organizado em três seções. A seção de Análise de Funcionalidade cobre trabalhos que
 avaliam características técnicas e operacionais dos sistemas BDST. A seção de Análise
 de Desempenho cobre estudos comparativos de benchmark. A seção de Análise Comparativa
@@ -79,7 +79,7 @@ inserções pontuais e em lote (grupos de~10) e três cenários de consulta de a
 umidade e métricas de qualidade do ar de 10 sensores simulados em uma janela de 24 horas).
 O PostgreSQL foi o sistema mais rápido tanto para inserção quanto para consulta nessas restrições
 de hardware; o InfluxDB apresentou o maior ganho relativo com o uso de lotes (melhoria de
-8,65$\times$ na vazão). TimescaleDB e InfluxDB foram destacados como escolhas mais adequadas
+8,65 vezes na vazão). TimescaleDB e InfluxDB foram destacados como escolhas mais adequadas
 quando recursos nativos de séries temporais, como políticas de retenção e agregados contínuos,
 são necessários em implantações de borda em produção. A reprodutibilidade foi classificada
 como inexistente, sem scripts ou configurações publicados.
@@ -193,7 +193,7 @@ vantagem estrutural. A mudança não invalida necessariamente o InfluxDB para ou
 trabalho; no entanto, motiva a inclusão de ambos os bancos de dados em qualquer avaliação
 comparativa contemporânea.
 
-Em resumo, a literatura revisada revela três lacunas principais que o presente trabalho aborda:
+A literatura revisada revela três lacunas principais que o presente trabalho aborda:
 (1) reprodutibilidade insuficiente: apenas um dos seis estudos é totalmente replicável;
 (2) cobertura limitada do IoTDB junto ao InfluxDB e TimescaleDB no mesmo benchmark controlado;
 e (3) a ausência de uma análise sistemática de como as escolhas metodológicas (isolamento de

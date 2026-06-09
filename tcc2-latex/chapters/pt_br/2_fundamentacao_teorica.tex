@@ -159,7 +159,7 @@ A arquitetura dos BDSTs modernos evoluiu consideravelmente. \cite{Dunning2014} d
 abordagens principais para o armazenamento de séries temporais: (1) tabelas largas que
 armazenam dados ponto a ponto; (2) um design híbrido misturando tabelas largas com armazenamento
 em blob; e (3) inserção direta de blob a partir de um cache em memória, que pode atingir taxas
-de ingestão até 1.000$\times$ mais rápidas que as abordagens ponto a ponto. Os BDSTs armazenam
+de ingestão até 1.000 vezes mais rápidas que as abordagens ponto a ponto. Os BDSTs armazenam
 múltiplas séries temporais de forma que consultas que recuperam dados de uma ou poucas séries
 para um intervalo de tempo específico sejam particularmente eficientes~\citep{Dunning2014}.
 Essa eficiência é alcançada por meio de estratégias de armazenamento que agrupam fisicamente
@@ -275,8 +275,8 @@ de banco de dados. Como observado nos seis estudos de desempenho revisados neste
 fornece os scripts e configurações exatas necessárias para replicação
 independente~\citep{pereira2023mulletbench}. Isso limita a capacidade
 de validar resultados, comparar descobertas entre estudos e construir sobre trabalhos anteriores,
-uma lacuna que este estudo aborda diretamente por meio de sua infraestrutura de benchmark
-totalmente automatizada e publicamente disponível.
+uma lacuna que este estudo aborda diretamente por meio de seu ambiente de benchmark
+totalmente automatizado e publicamente disponível.
 Além do compartilhamento de código, o isolamento de recursos entre os sistemas avaliados é
 igualmente crítico: executar múltiplos motores de banco de dados simultaneamente no mesmo
 hardware introduz artefatos de contenção de cache de páginas e entrada/saída que podem inverter

@@ -1,7 +1,7 @@
 \section{Experimentos}
 \label{sec:experiments}
 
-\subsection{Ambiente de Teste}
+%\subsection{Ambiente de Teste}
 
 Todos os benchmarks foram executados em uma única máquina host com as especificações listadas
 na Tabela~\ref{tab:hardware}. Os três contêineres de banco de dados e o cliente Java de
@@ -40,8 +40,8 @@ utilização total de todos os seis núcleos físicos; valores por banco de dado
 \subsubsection{Ingestão Sequencial de Linha de Base}
 
 A Tabela~\ref{tab:write-baseline} mostra o desempenho de escrita de linha de base na escala
-pequena sob a configuração ajustada. O IoTDB atinge 2,16\,M\,pts/s, aproximadamente 5$\times$
-o InfluxDB e 12$\times$ o TimescaleDB.
+pequena sob a configuração ajustada. O IoTDB atinge 2,16\,M\,pts/s, aproximadamente 5 vezes
+o InfluxDB e 12 vezes o TimescaleDB.
 
 \begin{table*}[t]
   \centering
@@ -118,15 +118,15 @@ escrita por ponto) e BATCH\_SIZE=1000 (1.000 pontos por requisição).
   \end{tabular}
 \end{table}
 
-IoTDB e InfluxDB mostram aceleração de 413--531$\times$, refletindo o alto custo da sobrecarga
+IoTDB e InfluxDB mostram aceleração de 413--531 vezes, refletindo o alto custo da sobrecarga
 por requisição. Para o InfluxDB, trata-se de uma rodada HTTP mais sobrecarga de conexão TCP;
-para o IoTDB, é o custo fixo de uma chamada Thrift por tablet. A razão de 42$\times$ do
+para o IoTDB, é o custo fixo de uma chamada Thrift por tablet. A razão de 42 vezes do
 TimescaleDB é marcadamente menor porque o flush do WAL do PostgreSQL já domina no LOTE=1:
 a sobrecarga por linha é tão alta que lotes maiores fornecem benefício proporcionalmente menor;
 o gargalo passa da sobrecarga de protocolo para a entrada/saída de armazenamento.
 
 Este resultado tem significado prático direto. Uma aplicação IoT que envia uma leitura de
-sensor por requisição HTTP ao InfluxDB atingirá vazão 531$\times$ menor do que aquela que
+sensor por requisição HTTP ao InfluxDB atingirá vazão 531 vezes menor do que aquela que
 armazena localmente em buffer e escreve em lotes. Para InfluxDB e IoTDB, agregar escritas em
 lotes é a otimização de maior impacto disponível.
 
@@ -212,7 +212,7 @@ por tempo~\citep{timescaledb}, onde consultas de último valor precisam acessar 
 mais recente, independentemente do volume total armazenado. O IoTDB mantém um cache de último valor em memória dedicado por série, servindo
 a consulta inteiramente da RAM sem acessar o TsFile~\citep{iotdblastquery}.
 
-O InfluxDB não tem atalho equivalente. Ele deve buscar o final dos blocos de arquivo TSM de
+O InfluxDB não tem atalho equivalente, assim,  deve buscar o final dos blocos de arquivo TSM de
 cada série, e esse custo de busca cresce à medida que mais arquivos TSM se acumulam ao longo
 do tempo de vida do conjunto de dados. A progressão resultante (9,24\,ms na escala pequena,
 21,72\,ms na média, 23,24\,ms na grande) confirma uma relação aproximadamente linear entre
@@ -296,30 +296,30 @@ A vantagem do IoTDB é grande e melhora com a escala. Cada bloco TsFile armazena
 estatísticas de mínimo/máximo por série. Um predicado de valor pode pular blocos inteiros cujo
 intervalo armazenado não intercepta o limiar do predicado, fornecendo indexação secundária
 leve na camada de armazenamento. Na escala grande, com mais dados por bloco, uma fração maior
-de blocos pode ser eliminada, produzindo a razão de escalonamento sublinear (5,2$\times$ para
+de blocos pode ser eliminada, produzindo a razão de escalonamento sublinear (5,2 vezes para
 dados cem vezes maiores). Esse é o comportamento esperado de uma estrutura de salto baseada
 em estatísticas: a razão de eliminação melhora à medida que os blocos ficam mais densos.
 
 O TimescaleDB usa o BRIN (Block Range INdex) do PostgreSQL, que registra valores de
 mínimo/máximo por intervalo de bloco em disco. O BRIN fornece eliminação com granularidade
 mais grosseira do que as estatísticas por bloco do IoTDB e degrada em taxa superlinear
-(21,3$\times$ para dados cem vezes maiores). Na escala grande, o TimescaleDB fica em média 510\,ms
-por consulta de filtro de valor, uma desvantagem de 26$\times$ relativa ao IoTDB. Essa
+(21,3 vezes para dados cem vezes maiores). Na escala grande, o TimescaleDB fica em média 510\,ms
+por consulta de filtro de valor, uma desvantagem de 26 vezes relativa ao IoTDB. Essa
 carga de trabalho também leva o TimescaleDB à sua maior utilização de CPU (77\% médio,
 83\% de pico), indicando que o executor de consultas é o gargalo.
 
 O InfluxDB não tem estrutura de eliminação baseada em estatísticas, mas se beneficia de algum
 salto grosseiro no nível de arquivo baseado em metadados de intervalo de tempo no índice TSM,
-produzindo uma razão de escalonamento de 7$\times$, significativamente melhor do que a do
-TimescaleDB, mas ainda 10$\times$ pior do que a do IoTDB em termos absolutos na escala grande.
+produzindo uma razão de escalonamento de 7 vezes, significativamente melhor do que a do
+TimescaleDB, mas ainda 10 vezes pior do que a do IoTDB em termos absolutos na escala grande.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\columnwidth]{figures/pt_br/chart_value_filter_scaling}
   \caption{Latência média de filtro de valor (ms, escala logarítmica) por escala. As
     estatísticas de mínimo/máximo por bloco do IoTDB produzem crescimento sublinear
-    (5,2$\times$ para dados cem vezes maiores); o índice BRIN do TimescaleDB degrada
-  superlinearmente (21,3$\times$).}
+    (5,2 vezes para dados cem vezes maiores); o índice BRIN do TimescaleDB degrada
+  superlinearmente (21,3 vezes).}
   \label{fig:value_filter_scaling}
 \end{figure}
 
@@ -428,11 +428,7 @@ em estado estacionário; o valor na escala grande é o mais representativo da va
 sustentada.
 
 O InfluxDB permanece aproximadamente constante entre as escalas pequena e média, padrão
-sugestivo de saturação pelo WAL e pela compactação TSM independentemente do volume. Na escala
-grande, o ganho observado é consistente com a amortização da sobrecarga de compactação em
-volumes maiores. O TimescaleDB mostra um padrão similar: plano da escala pequena para a média,
-com melhora na escala grande sugestiva de maior aproveitamento dos intervalos de checkpoint
-com execuções mais longas.
+sugestivo de saturação pelo WAL e pela compactação TSM independentemente do volume. Na escala grande, o ganho observado é consistente com a amortização da sobrecarga de compactação em volumes maiores. O TimescaleDB mostra um padrão similar: plano da escala pequena para a média, com melhora na escala grande sugestiva de maior aproveitamento dos intervalos de checkpoint com execuções mais longas.
 
 \begin{figure}[ht]
   \centering
@@ -511,8 +507,7 @@ alto porte.
 
 \subsubsection{Ganhos do InfluxDB com Isolamento}
 
-O InfluxDB não recebeu alterações de configuração nas execuções ajustadas. Suas melhorias
-vêm inteiramente da execução sem bancos de dados concorrentes. Todas as latências de leitura
+O InfluxDB não recebeu alterações de configuração nas execuções ajustadas. Suas melhorias vêm inteiramente da execução sem bancos de dados concorrentes. Todas as latências de leitura
 melhoraram 15--21\%, consistente com melhor utilização do cache de arquivos TSM uma vez que
 o cache de páginas do TimescaleDB não compete mais pelo espaço de buffer do SO. O resultado
 mais dramático foi o P99 do LOTE-GRANDE: 205\,ms $\to$ 60\,ms ($-$71\%). Na configuração
