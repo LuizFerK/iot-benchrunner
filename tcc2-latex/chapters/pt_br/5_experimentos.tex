@@ -37,6 +37,11 @@ utilização total de todos os seis núcleos físicos; valores por banco de dado
 \subsection{Desempenho de Escrita}
 \label{sec:write-results}
 
+Esta seção analisa o desempenho de escrita em três cenários: ingestão sequencial de linha de
+base, que mede a vazão máxima sustentada; sensibilidade ao tamanho do lote, que avalia o
+impacto do agrupamento de pontos por requisição; e ingestão fora de ordem, que testa o
+comportamento sob chegada temporalmente desordenada de dados.
+
 \subsubsection{Ingestão Sequencial de Linha de Base}
 
 A Tabela~\ref{tab:write-baseline} mostra o desempenho de escrita de linha de base na escala
@@ -61,7 +66,8 @@ o InfluxDB e 12 vezes o TimescaleDB.
 Os resultados são consistentes com três fatores arquiteturais cumulativos.
 
 \textbf{Profundidade do protocolo.} O iot-benchmark se conecta ao IoTDB via Session API Thrift RPC no modo SESSION\_BY\_TABLET,
-submetendo tablets colunares tipados diretamente por uma conexão TCP persistente.
+submetendo tablets colunares tipados (agrupamentos de múltiplos pontos de séries temporais
+em estrutura colunar) diretamente por uma conexão TCP persistente.
 Uma syscall submete um lote completo diretamente no buffer de escrita do TsFile. O InfluxDB
 requer uma requisição HTTP por escrita, incluindo gerenciamento de conexão, análise de texto do
 protocolo de linha e pesquisa de índice TSI. O TimescaleDB roteia cada escrita pela pilha
@@ -341,8 +347,6 @@ As medições de memória requerem interpretação cuidadosa porque as execuçõ
 benchmark com início compartilhado produziram valores substancialmente inflados por um artefato
 metodológico.
 
-\subsubsection{TimescaleDB}
-
 O TimescaleDB reportou aproximadamente 5,4\,GB desde o primeiro teste nas execuções
 originais. Isso não ocorreu devido ao pool de buffers do PostgreSQL, mas sim ao cache de páginas do sistema operacional, que havia sido acumulado durante as sessões de escrita anteriores do IoTDB. O Linux contabiliza o cache de páginas
 do sistema de arquivos como parte do RSS de um contêiner no \texttt{docker stats}, e o
@@ -352,18 +356,14 @@ aproximadamente 1,8\,GB após os testes de escrita aqueceram o \texttt{shared\_b
 O valor de 1,8\,GB é o footprint operacional preciso para esse tamanho de conjunto de dados
 sob a configuração ajustada.
 
-\subsubsection{IoTDB}
-
-O IoTDB reportou aproximadamente 12,5\,GB fixo ao longo das execuções originais.
+Já o IoTDB reportou aproximadamente 12,5\,GB fixo ao longo das execuções originais.
 Durante as horas em que ficou ocioso enquanto InfluxDB e TimescaleDB eram testados, a JVM
 expandiu o heap até próximo do teto máximo configurado e não devolveu essas páginas ao SO,
 comportamento padrão do gerenciador de heap da JVM. Nas execuções ajustadas, a JVM começa
 em 1,7\,GB e cresce para aproximadamente 10\,GB ao final da fase de leitura, refletindo a
 demanda real do conjunto de trabalho por fase de carga.
 
-\subsubsection{InfluxDB}
-
-O InfluxDB é o mais eficiente em memória entre as cargas de trabalho de escrita:
+O InfluxDB, por sua vez, é o mais eficiente em memória entre as cargas de trabalho de escrita:
 190--940\,MB em testes de escrita ajustados na escala pequena. No entanto, essa vantagem não
 se mantém incondicionalmente. Na escala grande, o LOTE-GRANDE atinge pico de 2,9\,GB à medida
 que o cache de escrita TSM mantém grandes volumes de lotes pendentes junto com buffers de
@@ -439,27 +439,22 @@ sugestivo de saturação pelo WAL e pela compactação TSM independentemente do 
   \label{fig:write_scaling}
 \end{figure}
 
-\subsubsection{Saturação JIT do IoTDB no LOTE-PEQUENO}
-
-A vazão de \texttt{batch-small} do IoTDB por escalas (28\,K $\to$ 81\,K $\to$ 446\,K pts/s)
-é uma das demonstrações mais claras de escalonamento impulsionado por JIT no conjunto de dados.
+Esse efeito JIT é ainda mais evidente na carga de trabalho \texttt{batch-small}: a vazão do
+IoTDB por escalas (28\,K $\to$ 81\,K $\to$ 446\,K pts/s) é uma das demonstrações mais claras
+de escalonamento impulsionado por JIT no conjunto de dados.
 A latência média simultaneamente diminui de 1,22\,ms para 0,40\,ms à medida que a
 escala aumenta, o que só é possível se a melhoria vier de otimização de código em vez de
 redução de carga. O valor na escala grande (446\,K pts/s, 0,40\,ms de latência média)
 representa a vazão de ingestão de ponto único em estado estacionário do IoTDB uma vez que o
 JIT compilou completamente o caminho quente de serialização Thrift~\citep{barrett2017warmup}.
 
-\subsubsection{Timeout do LOTE-GRANDE do TimescaleDB}
-
-O teste \texttt{batch-large} do TimescaleDB atinge o timeout de 3.600 segundos do benchmark
+Quanto ao TimescaleDB, o teste \texttt{batch-large} atinge o timeout de 3.600 segundos do benchmark
 na escala grande tanto nas execuções original quanto nas ajustadas. Com 50 dispositivos e um
 tamanho de lote de 1.000 linhas, cada requisição de escrita toca 50 partições de hipertabela
 simultaneamente e dispara até 50 flushes WAL concorrentes. O custo cumulativo de entrada/saída esgota
 o orçamento de tempo antes que a contagem total de laços seja completada. Isso não representa uma anomalia, sendo na verdade o resultado esperado do fan-out de partições na hipertabela sob cenários de alta concorrência e lotes volumosos de escrita. Para cargas de trabalho de carregamento em lote
 direcionadas ao TimescaleDB em escala, a contagem de partições deve ser ponderada contra a
 amplificação de flush WAL.
-
-\subsubsection{Crescimento Linear de Último Valor do InfluxDB}
 
 Entre as tendências multiescala, a progressão de latência de último valor do InfluxDB
 (9,24 $\to$ 21,72 $\to$ 23,24\,ms) merece atenção particular porque revela um problema

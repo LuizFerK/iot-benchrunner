@@ -75,19 +75,10 @@ de artefatos de medição, incluindo uma comparação explícita entre execuçõ
 recursos compartilhados e reexecuções isoladas e devidamente ajustadas, para validar quais
 descobertas refletem o comportamento genuíno de cada banco de dados.
 
-Os objetivos específicos deste trabalho são:
-\begin{itemize}
-  \item Medir o desempenho de escrita e leitura de três BDSTs em cargas de trabalho
-    representativas de implantações IoT reais;
-  \item Analisar como as características de desempenho escalonam com o volume de dados
-    em três escalas com variação de cem vezes no tamanho dos dados;
-  \item Identificar os mecanismos arquiteturais que explicam as diferenças de desempenho
-    observadas;
-  \item Quantificar o impacto das escolhas metodológicas do benchmark nos resultados
-    reportados; e
-  \item Fornecer um ambiente de benchmark reprodutível que permita a pesquisadores
-    futuros validar e estender de forma independente estes resultados.
-\end{itemize}
+Os resultados mostram que nenhum banco de dados domina em todas as dimensões: o IoTDB lidera em
+vazão de escrita sequencial e filtragem de valor, o TimescaleDB oferece latência constante em
+subamostragem e compatibilidade SQL completa, e o InfluxDB ocupa um meio-termo prático entre
+os dois.
 
 O restante deste artigo está organizado da seguinte forma.
 A Seção~\ref{sec:theoretical} apresenta a fundamentação teórica cobrindo bancos de dados,
