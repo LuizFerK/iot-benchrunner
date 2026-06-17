@@ -69,13 +69,16 @@
     display: flex;
     flex-direction: column;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateY(12px);
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
     overflow: hidden;
   }
 
   .slide.active {
     opacity: 1;
+    transform: translateY(0);
     pointer-events: all;
   }
 
@@ -283,6 +286,14 @@
     background: var(--canvas-night-soft);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-featured {
+    background: color-mix(in srgb, var(--primary) 8%, var(--canvas));
+    border: 1px solid color-mix(in srgb, var(--primary) 38%, var(--hairline));
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     padding: 24px;
   }
 
@@ -695,6 +706,11 @@
       linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
   }
 
+  .dark-mode .card-featured {
+    background: rgba(62, 207, 142, 0.09);
+    border-color: rgba(62, 207, 142, 0.28);
+  }
+
   .dark-mode #header,
   .dark-mode #footer {
     background: rgba(26, 26, 26, 0.50);
@@ -910,6 +926,13 @@
   .gap-20 { gap: 20px; }
   .gap-24 { gap: 24px; }
 
+  @media (prefers-reduced-motion: reduce) {
+    .slide {
+      transform: none !important;
+      transition: opacity 0.15s ease;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1114,18 +1137,18 @@
           </ul>
           <div style="background: var(--canvas); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 24px; margin-top: 8px;">
             <div style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-mute); margin-bottom: 8px;">Implicação</div>
-            <div style="font-size: 16px; font-weight: 500; color: var(--ink); line-height: 1.45;">Sem reprodutibilidade: resultados nao podem ser validados nem comparados entre estudos</div>
+            <div style="font-size: 16px; font-weight: 500; color: var(--ink); line-height: 1.45;">Sem reprodutibilidade: resultados não podem ser validados nem comparados entre estudos</div>
           </div>
         </div>
         <div class="col col-40" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px;">
           <div style="text-align: center;">
             <div style="font-size: 80px; font-weight: 500; letter-spacing: -3px; color: var(--ink); line-height: 1;">1/5</div>
-            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px; line-height: 1.4; max-width: 200px;">estudos com dados suficientes para replicacao independente</div>
+            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px; line-height: 1.4; max-width: 200px;">estudos com dados suficientes para replicação independente</div>
           </div>
           <div class="divider" style="width: 80px; background: var(--hairline);"></div>
           <div style="text-align: center;">
             <div style="font-size: 48px; font-weight: 500; letter-spacing: -1.44px; color: var(--primary); line-height: 1;">4/5</div>
-            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px;">estudos nao reprodutiveis</div>
+            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px;">estudos não reprodutíveis</div>
           </div>
         </div>
       </div>
@@ -1138,30 +1161,30 @@
   <div class="slide slide-light" data-index="6">
     <div class="slide-body">
       <div class="section-label">Objetivo</div>
-      <h2 class="display-lg slide-title">Objetivo e Questoes de Pesquisa</h2>
+      <h2 class="display-lg slide-title">Objetivo e Questões de Pesquisa</h2>
       <div class="divider"></div>
       <div style="background: var(--canvas-soft); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 28px; margin-bottom: 24px;">
         <div style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;">Objetivo</div>
-        <div style="font-size: 18px; font-weight: 500; color: var(--ink); line-height: 1.4;">Comparacao controlada e <span class="accent">reprodutivel</span> dos tres BDSTs em cargas de trabalho IoT realistas</div>
+        <div style="font-size: 18px; font-weight: 500; color: var(--ink); line-height: 1.4;">Comparação controlada e <span class="accent">reprodutível</span> dos três BDSTs em cargas de trabalho IoT realistas</div>
       </div>
       <div>
-        <div style="font-size: 14px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;">Questoes respondidas</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;">Questões respondidas</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="card" style="padding: 16px 20px;">
             <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q1</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Qual banco tem maior vazao de escrita e como ela escala?</div>
+            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Qual banco tem maior vazão de escrita e como ela escala?</div>
           </div>
           <div class="card" style="padding: 16px 20px;">
             <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q2</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais sao as latencias de leitura e como crescem com o volume?</div>
+            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais são as latências de leitura e como crescem com o volume?</div>
           </div>
           <div class="card" style="padding: 16px 20px;">
             <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q3</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais escolhas arquiteturais explicam as diferencas?</div>
+            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais escolhas arquiteturais explicam as diferenças?</div>
           </div>
           <div class="card" style="padding: 16px 20px;">
             <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q4</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">As escolhas metodologicas do benchmark afetam os resultados?</div>
+            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">As escolhas metodológicas do benchmark afetam os resultados?</div>
           </div>
         </div>
       </div>
@@ -1190,7 +1213,7 @@
           <div class="card" style="padding: 18px 20px;">
             <div style="font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Testes de leitura (5)</div>
             <ul class="list" style="gap: 8px;">
-              <li style="font-size: 14px;">Ultimo valor</li>
+              <li style="font-size: 14px;">Último valor</li>
               <li style="font-size: 14px;">Subamostragem</li>
               <li style="font-size: 14px;">Intervalo de tempo</li>
               <li style="font-size: 14px;">Filtro de valor</li>
@@ -1219,7 +1242,7 @@
                 <td>~50k pts</td>
               </tr>
               <tr>
-                <td class="td-strong">Media</td>
+                <td class="td-strong">Média</td>
                 <td>5</td>
                 <td>10</td>
                 <td>10</td>
@@ -1235,7 +1258,7 @@
             </tbody>
           </table>
           <div style="background: var(--canvas); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 20px; margin-top: 8px;">
-            <div style="font-size: 14px; color: var(--ink); line-height: 1.5;"><strong>27 combinacoes</strong> no total (9 testes x 3 escalas), cada uma executada de forma isolada</div>
+            <div style="font-size: 14px; color: var(--ink); line-height: 1.5;"><strong>27 combinações</strong> no total (9 testes × 3 escalas), cada uma executada de forma isolada</div>
           </div>
         </div>
       </div>
@@ -1248,25 +1271,25 @@
   <div class="slide slide-soft" data-index="8">
     <div class="slide-body">
       <div class="section-label">Metodologia</div>
-      <h2 class="display-lg slide-title">Infraestrutura <span class="accent">Reprodutivel</span></h2>
+      <h2 class="display-lg slide-title">Infraestrutura <span class="accent">Reprodutível</span></h2>
       <div class="divider"></div>
       <div class="infra-grid">
         <div class="infra-item">
           <div class="infra-item-title">Docker Compose</div>
-          <div class="infra-item-body">Versoes de imagem fixadas. Cada banco sobe e desce isoladamente — apenas um ativo por vez</div>
+          <div class="infra-item-body">Versões de imagem fixadas. Cada banco sobe e desce isoladamente — apenas um ativo por vez</div>
         </div>
         <div class="infra-item">
           <div class="infra-item-title">Python CLI</div>
-          <div class="infra-item-body"><code style="color: var(--primary); font-family: ui-monospace, Menlo, monospace;">benchmark.py</code> — orquestra todos os 27 testes com um unico comando</div>
+          <div class="infra-item-body"><code style="color: var(--primary); font-family: ui-monospace, Menlo, monospace;">benchmark.py</code> — orquestra todos os 27 testes com um único comando</div>
         </div>
         <div class="infra-item">
           <div class="infra-item-title">Nix Flake</div>
-          <div class="infra-item-body">Ambiente declarativo e reprodutivel: Java 17, Maven, Python 3, Docker. Zero configuracao manual</div>
+          <div class="infra-item-body">Ambiente declarativo e reprodutível: Java 17, Maven, Python 3, Docker. Zero configuração manual</div>
         </div>
         <div class="infra-item" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <div class="infra-item-title">Repositorio publico</div>
-            <div class="infra-item-body" style="margin-bottom: 12px;">Tudo disponivel para replicacao independente</div>
+            <div class="infra-item-body" style="margin-bottom: 12px;">Tudo disponível para replicação independente</div>
           </div>
           <div style="font-family: ui-monospace, Menlo, Monaco, monospace; font-size: 13px; color: var(--primary); word-break: break-all;">github.com/LuizFerK/iot-benchrunner</div>
         </div>
@@ -1319,10 +1342,10 @@
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
+          <div class="card-featured" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
             <div style="font-size: 22px; font-weight: 500; color: var(--primary);">-13%</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Melhor tolerancia absoluta e relativa</div>
+            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Melhor tolerância absoluta e relativa</div>
           </div>
           <div class="card" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">InfluxDB</div>
@@ -1332,7 +1355,7 @@
           <div class="card" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
             <div style="font-size: 22px; font-weight: 500; color: var(--ink);">-8%</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">WAL absorve bem a reordenacao</div>
+            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">WAL absorve bem a reordenação</div>
           </div>
         </div>
         <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
@@ -1340,7 +1363,7 @@
             <img src="../../tcc2-latex/figures/pt_br/chart_ooo_degradation.png" alt="Degradacao fora de ordem" style="max-height: 100%; max-width: 100%;">
           </div>
           <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Configuracao</span>&ensp;20% dos dados chegam com atraso (distribuicao de Poisson)
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Configuração</span>&ensp;20% dos dados chegam com atraso (distribuição de Poisson)
           </div>
         </div>
       </div>
@@ -1353,11 +1376,11 @@
   <div class="slide slide-light" data-index="11">
     <div class="slide-body">
       <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Leitura — Ultimo Valor</h2>
+      <h2 class="display-lg slide-title">Leitura — Último Valor</h2>
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
+          <div class="card-featured" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
             <div style="font-size: 26px; font-weight: 500; color: var(--primary);">0,38 ms</div>
             <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Indice reverso do PostgreSQL</div>
@@ -1370,7 +1393,7 @@
           <div class="card" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">InfluxDB</div>
             <div style="font-size: 26px; font-weight: 500; color: var(--ink);">9,24 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce linearmente com arquivos TSM (sem atalho de ultimo valor)</div>
+            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce linearmente com arquivos TSM (sem atalho de último valor)</div>
           </div>
         </div>
         <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
@@ -1378,7 +1401,7 @@
             <img src="../../tcc2-latex/figures/pt_br/chart_latest_point_scaling.png" alt="Escalonamento de ultimo valor" style="max-height: 100%; max-width: 100%;">
           </div>
           <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrao</span>&ensp;Monitoramento IoT critico: "qual e a leitura atual do sensor X?"
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrão</span>&ensp;Monitoramento IoT crítico: "qual é a leitura atual do sensor X?"
           </div>
         </div>
       </div>
@@ -1395,7 +1418,7 @@
       <div class="divider"></div>
       <div class="row" style="gap: 40px; align-items: flex-start;">
         <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
+          <div class="card-featured" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
             <div style="font-size: 20px; font-weight: 500; color: var(--primary);">3,72 ms → 19,4 ms</div>
             <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Crescimento <strong>sublinear</strong> — poda de blocos por estatisticas de min/max</div>
@@ -1416,7 +1439,7 @@
             <img src="../../tcc2-latex/figures/pt_br/chart_value_filter_scaling.png" alt="Escalonamento de filtro de valor" style="max-height: 100%; max-width: 100%;">
           </div>
           <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrao</span>&ensp;Alerta por limiar: "leituras acima de X nos ultimos N dias"
+            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrão</span>&ensp;Alerta por limiar: "leituras acima de X nos últimos N dias"
           </div>
         </div>
       </div>
@@ -1446,9 +1469,9 @@
                 <div style="font-size: 20px; font-weight: 500; color: var(--ink);">~10–15 GB</div>
               </div>
             </div>
-            <div style="font-size: 13px; color: var(--ink-mute);">Heap da JVM + buffers em memoria</div>
+            <div style="font-size: 13px; color: var(--ink-mute);">Heap da JVM + buffers em memória</div>
           </div>
-          <div class="card" style="padding: 16px 20px; border-left: 3px solid var(--primary);">
+          <div class="card-featured" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 6px;">InfluxDB</div>
             <div style="display: flex; gap: 16px; margin-bottom: 6px;">
               <div>
@@ -1461,7 +1484,7 @@
                 <div style="font-size: 20px; font-weight: 500; color: var(--primary);">~900 MB</div>
               </div>
             </div>
-            <div style="font-size: 13px; color: var(--ink-mute);">Mais eficiente em memoria</div>
+            <div style="font-size: 13px; color: var(--ink-mute);">Mais eficiente em memória</div>
           </div>
           <div class="card" style="padding: 16px 20px;">
             <div class="stat-db" style="margin-bottom: 6px;">TimescaleDB</div>
@@ -1493,7 +1516,7 @@
   ============================================================ -->
   <div class="slide slide-soft" data-index="14">
     <div class="slide-body">
-      <div class="section-label">Descoberta metodologica</div>
+      <div class="section-label">Descoberta metodológica</div>
       <h2 class="display-lg slide-title">Artefatos de <span class="accent">Benchmark</span></h2>
       <div class="divider"></div>
       <div class="row" style="gap: 32px; align-items: flex-start;">
@@ -1503,7 +1526,7 @@
             <thead>
               <tr>
                 <th>Resultado inicial</th>
-                <th>Reexecucao isolada</th>
+                <th>Reexecução isolada</th>
               </tr>
             </thead>
             <tbody>
@@ -1512,13 +1535,13 @@
                 <td><span class="artefact-value-good">2,7%</span> — artefato de despejo de cache</td>
               </tr>
               <tr>
-                <td>Saturacao de CPU TimescaleDB: <span class="artefact-value-bad">97,7%</span></td>
-                <td><span class="artefact-value-good">77,4%</span> — competicao de CPU compartilhada</td>
+                <td>Saturação de CPU TimescaleDB: <span class="artefact-value-bad">97,7%</span></td>
+                <td><span class="artefact-value-good">77,4%</span> — competição de CPU compartilhada</td>
               </tr>
             </tbody>
           </table>
           <div class="card" style="padding: 16px 20px; margin-top: 4px;">
-            <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.5;">Medicoes de memoria mudaram em <strong style="color: var(--primary);">uma ordem de magnitude</strong> ao corrigir o ciclo de vida compartilhado dos conteineres</div>
+            <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.5;">Medições de memória mudaram em <strong style="color: var(--primary);">uma ordem de magnitude</strong> ao corrigir o ciclo de vida compartilhado dos contêineres</div>
           </div>
         </div>
         <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
@@ -1536,12 +1559,12 @@
   <div class="slide slide-soft" data-index="15">
     <div class="slide-body">
       <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Heatmap de Latencia</h2>
+      <h2 class="display-lg slide-title">Heatmap de Latência</h2>
       <div class="divider"></div>
       <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 16px;">
         <div style="display: flex; gap: 24px; align-items: flex-start;">
           <div class="card" style="flex: 1; padding: 14px 18px;">
-            <div style="font-size: 14px; color: var(--ink); line-height: 1.45;">Comparacao multidimensional de todos os testes de leitura nos tres bancos</div>
+            <div style="font-size: 14px; color: var(--ink); line-height: 1.45;">Comparação multidimensional de todos os testes de leitura nos três bancos</div>
           </div>
           <div class="card" style="flex: 1; padding: 14px 18px;">
             <div style="font-size: 14px; color: var(--ink); line-height: 1.45;"><strong>Nenhum banco</strong> domina todas as dimensoes — padroes de forca e fraqueza emergem claramente</div>
@@ -1561,24 +1584,24 @@
   ============================================================ -->
   <div class="slide slide-light" data-index="16">
     <div class="slide-body">
-      <div class="section-label">Conclusao</div>
-      <h2 class="display-lg slide-title">Os Tres Achados Principais</h2>
+      <div class="section-label">Conclusão</div>
+      <h2 class="display-lg slide-title">Os Três Achados Principais</h2>
       <div class="divider"></div>
       <div style="display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0;">
         <div class="finding-block">
           <div class="finding-num">Achado 1</div>
           <div class="finding-title">Nenhum banco domina em todas as cargas de trabalho</div>
-          <div class="finding-body">IoTDB lidera escrita; TimescaleDB lidera subamostragem e ultimo valor; InfluxDB equilibra em cenarios de carga mista</div>
+          <div class="finding-body">IoTDB lidera escrita; TimescaleDB lidera subamostragem e último valor; InfluxDB equilibra em cenários de carga mista</div>
         </div>
         <div class="finding-block">
           <div class="finding-num">Achado 2</div>
-          <div class="finding-title">Escolhas arquiteturais determinam o comportamento de escalonamento, nao o ajuste</div>
-          <div class="finding-body">Vantagem do filtro de valor do IoTDB cresce com o volume (poda de blocos). Latencia de ultimo valor do InfluxDB cresce linearmente (sem atalho TSM). Subamostragem do TimescaleDB e genuinamente de latencia constante (janela fixa)</div>
+          <div class="finding-title">Escolhas arquiteturais determinam o comportamento de escalonamento, não o ajuste</div>
+          <div class="finding-body">Vantagem do filtro de valor do IoTDB cresce com o volume (poda de blocos). Latência de último valor do InfluxDB cresce linearmente (sem atalho TSM). Subamostragem do TimescaleDB é genuinamente de latência constante (janela fixa)</div>
         </div>
         <div class="finding-block">
           <div class="finding-num">Achado 3</div>
           <div class="finding-title">A metodologia afeta criticamente a validade do benchmark</div>
-          <div class="finding-body">Ambientes com recursos compartilhados produzem resultados enganosos. Reexecucoes isoladas sao obrigatorias antes de apresentar propriedades arquiteturais</div>
+          <div class="finding-body">Ambientes com recursos compartilhados produzem resultados enganosos. Reexecuções isoladas são obrigatórias antes de apresentar propriedades arquiteturais</div>
         </div>
       </div>
     </div>
@@ -1589,8 +1612,8 @@
   ============================================================ -->
   <div class="slide slide-soft" data-index="17">
     <div class="slide-body">
-      <div class="section-label">Conclusao</div>
-      <h2 class="display-lg slide-title">Guia de Selecao por Carga de Trabalho</h2>
+      <div class="section-label">Conclusão</div>
+      <h2 class="display-lg slide-title">Guia de Seleção por Carga de Trabalho</h2>
       <div class="divider"></div>
       <table class="data-table selection-table" style="flex: 1;">
         <thead>
@@ -1605,7 +1628,7 @@
             <td class="td-strong" style="color: var(--primary);">IoTDB</td>
           </tr>
           <tr>
-            <td>Analise com consultas de painel em janelas de tempo recentes</td>
+            <td>Análise com consultas de painel em janelas de tempo recentes</td>
             <td class="td-strong" style="color: var(--primary);">TimescaleDB</td>
           </tr>
           <tr>
@@ -1613,7 +1636,7 @@
             <td class="td-strong" style="color: var(--primary);">IoTDB <span style="font-weight: 400; color: var(--ink-mute); font-size: 13px;">(filtro sublinear)</span></td>
           </tr>
           <tr>
-            <td>Carga mista, memoria restrita, volume moderado</td>
+            <td>Carga mista, memória restrita, volume moderado</td>
             <td class="td-strong" style="color: var(--primary);">InfluxDB</td>
           </tr>
           <tr>
@@ -1630,26 +1653,26 @@
   ============================================================ -->
   <div class="slide slide-light" data-index="18">
     <div class="slide-body">
-      <div class="section-label">Limitacoes e trabalhos futuros</div>
-      <h2 class="display-lg slide-title">Limitacoes e Trabalhos Futuros</h2>
+      <div class="section-label">Limitações e trabalhos futuros</div>
+      <h2 class="display-lg slide-title">Limitações e Trabalhos Futuros</h2>
       <div class="divider"></div>
       <div class="two-col-cards">
         <div class="limit-card">
-          <div class="limit-card-title">Limitacoes</div>
+          <div class="limit-card-title">Limitações</div>
           <ul class="list" style="gap: 10px;">
-            <li style="font-size: 14px;">Implantacao em no unico (sem latencia real de rede)</li>
-            <li style="font-size: 14px;">Testes de leitura sequenciais (cache de paginas aquecido)</li>
-            <li style="font-size: 14px;">Durabilidade diferida do IoTDB (reconhecimento em memoria antes do disco)</li>
+            <li style="font-size: 14px;">Implantação em nó único (sem latência real de rede)</li>
+            <li style="font-size: 14px;">Testes de leitura sequenciais (cache de páginas aquecido)</li>
+            <li style="font-size: 14px;">Durabilidade diferida do IoTDB (reconhecimento em memória antes do disco)</li>
             <li style="font-size: 14px;">Aquecimento da JVM (benchmarks curtos subestimam o IoTDB)</li>
           </ul>
         </div>
         <div class="limit-card" style="background: var(--canvas); border-color: var(--primary); border-width: 1px;">
           <div class="limit-card-title" style="color: var(--primary);">Trabalhos futuros</div>
           <ul class="list" style="gap: 10px;">
-            <li style="font-size: 14px;">Implantacoes distribuidas (IoTDB cluster, InfluxDB Clustered, TimescaleDB + Citus)</li>
-            <li style="font-size: 14px;">Datasets do mundo real (telemetria veicular, redes eletricas, escala de bilhoes de pontos)</li>
-            <li style="font-size: 14px;">Overhead de durabilidade e alta disponibilidade (replicacao, failover)</li>
-            <li style="font-size: 14px;">Evolucao de versoes (IoTDB 2.x, InfluxDB 3.0 com motor colunar Arrow/DataFusion)</li>
+            <li style="font-size: 14px;">Implantações distribuídas (IoTDB cluster, InfluxDB Clustered, TimescaleDB + Citus)</li>
+            <li style="font-size: 14px;">Datasets do mundo real (telemetria veicular, redes elétricas, escala de bilhões de pontos)</li>
+            <li style="font-size: 14px;">Overhead de durabilidade e alta disponibilidade (replicação, failover)</li>
+            <li style="font-size: 14px;">Evolução de versões (IoTDB 2.x, InfluxDB 3.0 com motor colunar Arrow/DataFusion)</li>
           </ul>
         </div>
       </div>
@@ -1665,7 +1688,7 @@
         <span class="pill">Perguntas?</span>
       </div>
       <h1 style="font-size: 38px; font-weight: 500; line-height: 1.15; letter-spacing: -0.72px; color: var(--ink); max-width: 820px; margin-bottom: 32px; text-align: center;">
-        Uma Análise <span class="accent">Reprodutivel</span> de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
+        Uma Análise <span class="accent">Reprodutível</span> de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
       </h1>
       <div style="width: 40px; height: 2px; background: var(--hairline); margin: 0 auto 28px; border-radius: 1px;"></div>
       <div style="font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 6px;">Luiz Fernando Klein</div>
@@ -1675,7 +1698,7 @@
         github.com/LuizFerK/iot-benchrunner
       </div>
       <div style="max-width: 580px; margin: 20px auto 0; font-size: 14px; color: var(--ink-mute); line-height: 1.55; text-align: center;">
-        Scripts de orquestracao, configuracoes Docker, ambiente Nix e dados de resultados disponiveis para replicacao
+        Scripts de orquestração, configurações Docker, ambiente Nix e dados de resultados disponíveis para replicação
       </div>
     </div>
   </div>
@@ -1712,9 +1735,19 @@
   let current = 0;
 
   function showSlide(index) {
-    slides[current].classList.remove('active');
-    current = Math.max(0, Math.min(index, total - 1));
-    slides[current].classList.add('active');
+    const next = Math.max(0, Math.min(index, total - 1));
+    if (next === current) return;
+    const outgoing = slides[current];
+    current = next;
+    const incoming = slides[current];
+
+    outgoing.style.transform = 'translateY(-8px)';
+    outgoing.classList.remove('active');
+    outgoing.addEventListener('transitionend', () => {
+      outgoing.style.transform = '';
+    }, { once: true });
+
+    incoming.classList.add('active');
     updateUI();
   }
 
