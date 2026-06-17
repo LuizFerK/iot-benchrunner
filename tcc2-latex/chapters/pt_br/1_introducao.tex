@@ -1,8 +1,7 @@
 \section{Introdução}
 \label{sec:intro}
 
-A adoção generalizada das tecnologias de Internet das Coisas (IoT), sistemas de monitoramento
-industrial e aplicações financeiras em tempo real gerou um volume sem precedentes de dados
+A adoção generalizada das tecnologias de Internet das Coisas (IoT), sistemas de monitoramento industrial e aplicações financeiras em tempo real gerou um volume sem precedentes de dados
 temporais, criando desafios críticos para as infraestruturas de armazenamento e análise.
 Conforme projetado por~\cite{thierer2015iot}, o número de dispositivos IoT conectados vem
 crescendo exponencialmente e deve continuar aumentando nos próximos anos, conforme ilustrado
@@ -18,10 +17,7 @@ na Figura~\ref{fig:iot_projection}.
 Tal crescimento foi posteriormente reafirmado por~\cite{zikria2021nextgen}, que aponta que a Cisco prevê 500 bilhões de dispositivos conectados à IoT até 2030, enquanto a Telefonica estima que 90\% dos veículos estarão conectados e cada pessoa terá, em média, 15 dispositivos conectados nesse mesmo horizonte. A proliferação de aplicações de próxima geração, abrangendo saúde inteligente, cidades inteligentes, agricultura inteligente e IoT industrial, confirma que as projeções feitas em 2015 não apenas se concretizaram, mas continuam a se ampliar.
 
 Como observado por~\cite{palma2016}, inúmeros setores passaram a depender da capacidade de
-processar fluxos contínuos de dados. Entre eles: o setor financeiro, que utiliza essa
-capacidade para analisar flutuações de ações e volumes de transações; os serviços de
-transporte, que a empregam para monitorar viagens e migrações sazonais; a medicina, que a
-utiliza para rastrear a disseminação de doenças; e a análise meteorológica, que aproveita
+processar fluxos contínuos de dados. Entre eles: o setor financeiro, que utiliza essa capacidade para analisar flutuações de ações e volumes de transações; os serviços de transporte, que a empregam para monitorar viagens e migrações sazonais; a medicina, que a utiliza para rastrear a disseminação de doenças; e a análise meteorológica, que aproveita
 dados históricos para previsões mais precisas.
 
 Esses fluxos de dados são sequências de eventos ou medições naturalmente ordenadas e indexadas
@@ -34,10 +30,10 @@ de longo prazo.
 
 Nesse cenário, os Bancos de Dados de Séries Temporais (BDSTs) emergiram como soluções
 especializadas, arquitetadas desde a concepção para atender às demandas exclusivas dos dados
-temporais~\citep{InfluxDataTimeSeries}. Como argumentado por~\cite{naqvi2017influxdb}, os
+temporais~\citep{InfluxDataTimeSeries}. Os
 bancos de dados relacionais tradicionais sofrem de ineficiências de indexação e limitações de
 memória ao lidar com grandes volumes de dados temporais, enquanto os BDSTs mantêm alto
-desempenho por terem sido construídos com o tempo como preocupação central. Além da vazão,
+desempenho por terem sido construídos com o tempo como preocupação central ~~\cite{naqvi2017influxdb}. Além da vazão,
 os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
 intervalos de tempo e políticas automáticas de retenção que reduzem os custos operacionais,
 recursos importantes para aplicações IoT onde medições contínuas de sensores demandam
@@ -71,7 +67,7 @@ publicamente disponível junto com os resultados.
 Este artigo apresenta uma comparação controlada e reprodutível do Apache IoTDB, InfluxDB~2.7
 e TimescaleDB em nove padrões de carga de trabalho representativos de implantações IoT e
 três escalas de volume de dados. Os bancos de dados foram selecionados com base em sua
-proeminência na literatura comparativa recente: InfluxDB como o padrão de referência
+proeminência na literatura: InfluxDB como o padrão de referência
 estabelecido, Apache IoTDB como o líder emergente nos dois estudos mais recentes~\citep{pereira2023mulletbench,wang2023iotdb},
 e TimescaleDB como a alternativa baseada em SQL que oferece ampla compatibilidade com
 ecossistemas. A metodologia de benchmark foi projetada para isolar propriedades arquiteturais

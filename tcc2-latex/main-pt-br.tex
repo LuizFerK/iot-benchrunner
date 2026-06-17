@@ -68,7 +68,6 @@ anchorcolor=darkblue,citecolor=darkblue}
     InfluxDB~2.7 e TimescaleDB (PostgreSQL~15) em nove tipos de carga de trabalho IoT em três
     escalas de volume de dados com variação de cem vezes no tamanho dos dados, utilizando um
     ambiente totalmente automatizado construído sobre Docker Compose e iot-benchmark.
-
     Os resultados mostram que nenhum banco de dados domina todas as cargas de trabalho. O IoTDB
     lidera em vazão de escrita (23,6\,M\,pts/s na escala grande) e escalonamento de filtro de valor
     (crescimento de latência de 5,2$\times$ para dados cem vezes maiores). O TimescaleDB fornece
@@ -85,12 +84,10 @@ anchorcolor=darkblue,citecolor=darkblue}
     time-indexed sensor data, exposing the limitations of traditional databases and driving the
     adoption of specialized Time Series Databases (TSDBs). Despite growing interest, most published
     TSDB benchmarks lack sufficient scripts and configurations for independent replication.
-
     This paper presents a controlled, reproducible benchmark comparing Apache IoTDB~1.3.0,
     InfluxDB~2.7, and TimescaleDB (PostgreSQL~15) across nine IoT workload types at three
     data-volume scales spanning a hundredfold range in data size, using a fully scripted infrastructure
     built on Docker Compose and iot-benchmark.
-
     Results show that no single database dominates all workloads. IoTDB leads on write throughput
     (23.6\,M\,pts/s at large scale) and value-filter scaling (5.2$\times$ latency growth for
     a hundredfold increase in data). TimescaleDB provides sub-millisecond downsampling across all scales and the
