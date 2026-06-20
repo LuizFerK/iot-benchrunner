@@ -1,1235 +1,1972 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Uma Análise Reprodutível — IoTDB, InfluxDB e TimescaleDB</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  :root {
-    --canvas: #ffffff;
-    --canvas-soft: #fafafa;
-    --canvas-night: #1c1c1c;
-    --canvas-night-soft: #202020;
-    --primary: #3ecf8e;
-    --primary-deep: #24b47e;
-    --ink: #171717;
-    --ink-secondary: #212121;
-    --ink-mute: #707070;
-    --ink-mute-2: #9a9a9a;
-    --ink-faint: #b2b2b2;
-    --on-primary: #171717;
-    --on-dark: #ffffff;
-    --hairline: #dfdfdf;
-    --hairline-strong: #c7c7c7;
-    --hairline-cool: #ededed;
-  }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: var(--canvas);
-    color: var(--ink);
-  }
-
-  /* Progress bar */
-  #progress-bar {
-    position: fixed;
-    top: 52px;
-    left: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: width 0.3s ease;
-    z-index: 99;
-  }
-
-  /* Slide container */
-  #slides-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  .slide {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
-    overflow: hidden;
-  }
-
-  .slide.active {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: all;
-  }
-
-  /* Slide backgrounds */
-  .slide-light {
-    background-color: var(--canvas);
-    background-image:
-      linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-    background-size: 56px 56px;
-  }
-
-  .slide-soft {
-    background-color: var(--canvas-soft);
-    background-image:
-      linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-    background-size: 56px 56px;
-  }
-
-  .slide-dark {
-    background-color: var(--canvas-night);
-    background-image:
-      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size: 56px 56px;
-    color: var(--on-dark);
-  }
-
-  /* Slide inner padding */
-  .slide-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 76px 72px 72px;
-    overflow: hidden;
-  }
-
-  .slide-body-centered {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 76px 72px 72px;
-    text-align: center;
-    overflow: hidden;
-  }
-
-  /* Typography tokens */
-  .display-xxl {
-    font-size: 64px;
-    font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -1.92px;
-    color: var(--ink);
-  }
-
-  .display-xl {
-    font-size: 48px;
-    font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -1.44px;
-    color: var(--ink);
-  }
-
-  .display-lg {
-    font-size: 36px;
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.72px;
-    color: var(--ink);
-  }
-
-  .display-md {
-    font-size: 28px;
-    font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: -0.42px;
-    color: var(--ink);
-  }
-
-  .heading-lg {
-    font-size: 22px;
-    font-weight: 500;
-    line-height: 1.2;
-    color: var(--ink);
-  }
-
-  .heading-md {
-    font-size: 18px;
-    font-weight: 500;
-    line-height: 1.4;
-    color: var(--ink);
-  }
-
-  .body-lg {
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 1.55;
-    color: var(--ink);
-  }
-
-  .body-md {
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--ink);
-  }
-
-  .caption {
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 1.45;
-    color: var(--ink-mute);
-  }
-
-  /* Dark slide overrides */
-  .slide-dark .display-xxl,
-  .slide-dark .display-xl,
-  .slide-dark .display-lg,
-  .slide-dark .display-md,
-  .slide-dark .heading-lg,
-  .slide-dark .heading-md,
-  .slide-dark .body-lg,
-  .slide-dark .body-md {
-    color: var(--on-dark);
-  }
-
-  .slide-dark .caption {
-    color: rgba(255,255,255,0.55);
-  }
-
-  /* Emerald accent */
-  .accent {
-    color: var(--primary);
-  }
-
-  /* Section label */
-  .section-label {
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-    margin-bottom: 20px;
-  }
-
-  .slide-dark .section-label {
-    color: rgba(255,255,255,0.45);
-  }
-
-  /* Slide title with bottom separator */
-  .slide-title {
-    margin-bottom: 32px;
-  }
-
-  /* Divider */
-  .divider {
-    width: 40px;
-    height: 2px;
-    background: var(--primary);
-    margin-bottom: 24px;
-    border-radius: 1px;
-  }
-
-  /* Content rows */
-  .row {
-    display: flex;
-    gap: 40px;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .col {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .col-40 { flex: 0 0 40%; }
-  .col-50 { flex: 0 0 50%; }
-  .col-55 { flex: 0 0 55%; }
-  .col-60 { flex: 0 0 60%; }
-
-  /* Cards */
-  .card {
-    background: var(--canvas);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 24px;
-  }
-
-  .card-elevated {
-    background: var(--canvas);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    padding: 24px;
-  }
-
-  .card-dark {
-    background: var(--canvas-night-soft);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 24px;
-  }
-
-  .card-featured {
-    background: color-mix(in srgb, var(--primary) 8%, var(--canvas));
-    border: 1px solid color-mix(in srgb, var(--primary) 38%, var(--hairline));
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 24px;
-  }
-
-  /* Image card */
-  .img-card {
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--canvas-soft);
-  }
-
-  .img-card img {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  /* Code block */
-  .code-block {
-    background: var(--canvas-soft);
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 16px 20px;
-    font-family: ui-monospace, Menlo, Monaco, Consolas, 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--ink);
-    white-space: pre;
-    overflow-x: auto;
-  }
-
-  /* List styles */
-  .list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .list li {
-    position: relative;
-    padding-left: 18px;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--ink);
-  }
-
-  .list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: calc(0.75em - 3px);
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-  }
-
-  .slide-dark .list li {
-    color: rgba(255,255,255,0.85);
-  }
-
-  .list-lg {
-    gap: 16px;
-  }
-
-  .list-lg li {
-    font-size: 18px;
-  }
-
-  /* Tables */
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--canvas);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--hairline);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    font-size: 14px;
-  }
-
-  .data-table thead {
-    background: var(--canvas-soft);
-  }
-
-  .data-table th {
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--ink-mute);
-    border-bottom: 1px solid var(--hairline);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-
-  .data-table td {
-    padding: 12px 16px;
-    font-size: 14px;
-    color: var(--ink);
-    border-bottom: 1px solid var(--hairline-cool);
-    line-height: 1.45;
-  }
-
-  .data-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .data-table tr:hover td {
-    background: var(--canvas-soft);
-  }
-
-  .data-table .td-strong {
-    font-weight: 500;
-  }
-
-  /* Dark table */
-  .data-table-dark {
-    background: var(--canvas-night-soft);
-    border-color: rgba(255,255,255,0.1);
-  }
-
-  .data-table-dark thead {
-    background: rgba(255,255,255,0.05);
-  }
-
-  .data-table-dark th {
-    color: rgba(255,255,255,0.45);
-    border-bottom-color: rgba(255,255,255,0.1);
-  }
-
-  .data-table-dark td {
-    color: rgba(255,255,255,0.85);
-    border-bottom-color: rgba(255,255,255,0.07);
-  }
-
-  .data-table-dark tr:hover td {
-    background: rgba(255,255,255,0.04);
-  }
-
-  /* Numbered list (agenda) */
-  .numbered-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .numbered-list li {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 17px;
-    font-weight: 400;
-    line-height: 1.45;
-    color: var(--ink);
-  }
-
-  .numbered-list .num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
-
-  /* Stat blocks */
-  .stat-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 16px;
-  }
-
-  .stat-block {
-    flex: 1;
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    padding: 20px;
-    background: var(--canvas);
-  }
-
-  .stat-value {
-    font-size: 32px;
-    font-weight: 500;
-    letter-spacing: -0.72px;
-    color: var(--ink);
-    line-height: 1.1;
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: var(--ink-mute);
-    margin-top: 4px;
-  }
-
-  .stat-db {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 6px;
-  }
-
-  /* Finding blocks */
-  .finding-block {
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    padding: 20px 24px;
-    background: var(--canvas);
-    margin-bottom: 16px;
-  }
-
-  .finding-block:last-child {
-    margin-bottom: 0;
-  }
-
-  .finding-num {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--primary);
-    margin-bottom: 6px;
-  }
-
-  .finding-title {
-    font-size: 17px;
-    font-weight: 500;
-    color: var(--ink);
-    margin-bottom: 8px;
-  }
-
-  .finding-body {
-    font-size: 14px;
-    color: var(--ink-mute);
-    line-height: 1.5;
-  }
-
-  /* Pill */
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 2px 10px;
-    border-radius: 9999px;
-  }
-
-  .pill-soft {
-    background: var(--canvas-soft);
-    color: var(--ink);
-    border: 1px solid var(--hairline);
-  }
-
-  /* Header */
-  #header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 40px;
-    backdrop-filter: blur(0.5px);
-    -webkit-backdrop-filter: blur(0.5px);
-    background: rgba(255, 255, 255, 0.36);
-    border-bottom: 1px solid var(--hairline);
-    z-index: 101;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  .header-project {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: color 0.3s ease;
-  }
-
-  .header-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--primary);
-    flex-shrink: 0;
-  }
-
-  .header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1px;
-  }
-
-  .header-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-    transition: color 0.3s ease;
-  }
-
-  .header-institution {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--ink-mute);
-    letter-spacing: 0.01em;
-    transition: color 0.3s ease;
-  }
-
-  /* Footer */
-  #footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 40px;
-    backdrop-filter: blur(0.5px);
-    -webkit-backdrop-filter: blur(0.5px);
-    background: rgba(255, 255, 255, 0.36);
-    border-top: 1px solid var(--hairline);
-    z-index: 101;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  .nav-icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    border: 1px solid var(--hairline-strong);
-    border-radius: 6px;
-    color: var(--ink);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .nav-icon-btn:hover {
-    background: var(--canvas-soft);
-    border-color: var(--ink-faint);
-  }
-
-  .nav-icon-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
-    background: transparent;
-  }
-
-  #btn-theme {
-    color: var(--ink-mute-2);
-  }
-
-  #counter {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--ink-mute);
-    min-width: 52px;
-    text-align: center;
-    font-family: 'Inter', sans-serif;
-    transition: color 0.3s ease;
-  }
-
-  /* Dark mode */
-  .dark-mode {
-    --canvas: #1a1a1a;
-    --canvas-soft: #1f1f1f;
-    --canvas-night: #0f0f0f;
-    --canvas-night-soft: #151515;
-    --ink: #efefef;
-    --ink-secondary: #d0d0d0;
-    --ink-mute: rgba(255,255,255,0.50);
-    --ink-mute-2: rgba(255,255,255,0.38);
-    --ink-faint: rgba(255,255,255,0.24);
-    --on-dark: #efefef;
-    --hairline: rgba(255,255,255,0.08);
-    --hairline-strong: rgba(255,255,255,0.14);
-    --hairline-cool: rgba(255,255,255,0.06);
-  }
-
-  .dark-mode .slide-light,
-  .dark-mode .slide-soft {
-    background-image:
-      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  }
-
-  .dark-mode .card-featured {
-    background: rgba(62, 207, 142, 0.09);
-    border-color: rgba(62, 207, 142, 0.28);
-  }
-
-  .dark-mode #header,
-  .dark-mode #footer {
-    background: rgba(26, 26, 26, 0.50);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .dark-mode .header-project,
-  .dark-mode .header-name {
-    color: rgba(255, 255, 255, 0.85);
-  }
-
-  .dark-mode .header-institution {
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .dark-mode #counter {
-    color: rgba(255, 255, 255, 0.45);
-  }
-
-  .dark-mode .nav-icon-btn {
-    color: rgba(255, 255, 255, 0.65);
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .dark-mode .nav-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  /* -----------------------------------------------
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uma Análise Reprodutível — IoTDB, InfluxDB e TimescaleDB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --canvas: #ffffff;
+        --canvas-soft: #fafafa;
+        --canvas-night: #1c1c1c;
+        --canvas-night-soft: #202020;
+        --primary: #3ecf8e;
+        --primary-deep: #24b47e;
+        --ink: #171717;
+        --ink-secondary: #212121;
+        --ink-mute: #707070;
+        --ink-mute-2: #9a9a9a;
+        --ink-faint: #b2b2b2;
+        --on-primary: #171717;
+        --on-dark: #ffffff;
+        --hairline: #dfdfdf;
+        --hairline-strong: #c7c7c7;
+        --hairline-cool: #ededed;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: var(--canvas);
+        color: var(--ink);
+      }
+
+      /* Progress bar */
+      #progress-bar {
+        position: fixed;
+        top: 52px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--primary);
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 0.3s ease;
+        z-index: 99;
+      }
+
+      /* Slide container */
+      #slides-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transform: translateY(12px);
+        transition:
+          opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+          transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .slide.active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: all;
+      }
+
+      /* Slide backgrounds */
+      .slide-light {
+        background-color: var(--canvas);
+        background-image:
+          linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+      }
+
+      .slide-soft {
+        background-color: var(--canvas-soft);
+        background-image:
+          linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+      }
+
+      .slide-dark {
+        background-color: var(--canvas-night);
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 56px 56px;
+        color: var(--on-dark);
+      }
+
+      /* Slide inner padding */
+      .slide-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 76px 72px 72px;
+        overflow: hidden;
+      }
+
+      .slide-body-centered {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 76px 72px 72px;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      /* Typography tokens */
+      .display-xxl {
+        font-size: 64px;
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -1.92px;
+        color: var(--ink);
+      }
+
+      .display-xl {
+        font-size: 48px;
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -1.44px;
+        color: var(--ink);
+      }
+
+      .display-lg {
+        font-size: 36px;
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: -0.72px;
+        color: var(--ink);
+      }
+
+      .display-md {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.42px;
+        color: var(--ink);
+      }
+
+      .heading-lg {
+        font-size: 22px;
+        font-weight: 500;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+
+      .heading-md {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: var(--ink);
+      }
+
+      .body-lg {
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--ink);
+      }
+
+      .body-md {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+
+      .caption {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.45;
+        color: var(--ink-mute);
+      }
+
+      /* Dark slide overrides */
+      .slide-dark .display-xxl,
+      .slide-dark .display-xl,
+      .slide-dark .display-lg,
+      .slide-dark .display-md,
+      .slide-dark .heading-lg,
+      .slide-dark .heading-md,
+      .slide-dark .body-lg,
+      .slide-dark .body-md {
+        color: var(--on-dark);
+      }
+
+      .slide-dark .caption {
+        color: rgba(255, 255, 255, 0.55);
+      }
+
+      /* Emerald accent */
+      .accent {
+        color: var(--primary);
+      }
+
+      /* Section label */
+      .section-label {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
+        margin-bottom: 12px;
+      }
+
+      .slide-dark .section-label {
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      /* Slide title with bottom separator */
+      .slide-title {
+        margin-bottom: 20px;
+      }
+
+      /* Divider */
+      .divider {
+        width: 40px;
+        height: 2px;
+        background: var(--primary);
+        margin-bottom: 16px;
+        border-radius: 1px;
+      }
+
+      /* Content rows */
+      .row {
+        display: flex;
+        gap: 40px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .col {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .col-40 {
+        flex: 0 0 40%;
+      }
+      .col-50 {
+        flex: 0 0 50%;
+      }
+      .col-55 {
+        flex: 0 0 55%;
+      }
+      .col-60 {
+        flex: 0 0 60%;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--canvas);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+      }
+
+      .card-elevated {
+        background: var(--canvas);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+      }
+
+      .card-dark {
+        background: var(--canvas-night-soft);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .card-featured {
+        background: color-mix(in srgb, var(--primary) 8%, var(--canvas));
+        border: 1px solid
+          color-mix(in srgb, var(--primary) 38%, var(--hairline));
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+      }
+
+      /* Image card */
+      .img-card {
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--canvas-soft);
+      }
+
+      .img-card img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      /* Code block */
+      .code-block {
+        background: var(--canvas-soft);
+        border: 1px solid var(--hairline);
+        border-radius: 6px;
+        padding: 16px 20px;
+        font-family:
+          ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink);
+        white-space: pre;
+        overflow-x: auto;
+      }
+
+      /* List styles */
+      .list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .list li {
+        position: relative;
+        padding-left: 18px;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+
+      .list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: calc(0.75em - 3px);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+
+      .slide-dark .list li {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .list-lg {
+        gap: 16px;
+      }
+
+      .list-lg li {
+        font-size: 18px;
+      }
+
+      /* Tables */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--canvas);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--hairline);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        font-size: 14px;
+      }
+
+      .data-table thead {
+        background: var(--canvas-soft);
+      }
+
+      .data-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--ink-mute);
+        border-bottom: 1px solid var(--hairline);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .data-table td {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: var(--ink);
+        border-bottom: 1px solid var(--hairline-cool);
+        line-height: 1.45;
+      }
+
+      .data-table-compact td,
+      .data-table-compact th {
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      .data-table-spacious td,
+      .data-table-spacious th {
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .data-table tr:hover td {
+        background: var(--canvas-soft);
+      }
+
+      .data-table .td-strong {
+        font-weight: 500;
+      }
+
+      /* Dark table */
+      .data-table-dark {
+        background: var(--canvas-night-soft);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .data-table-dark thead {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .data-table-dark th {
+        color: rgba(255, 255, 255, 0.45);
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .data-table-dark td {
+        color: rgba(255, 255, 255, 0.85);
+        border-bottom-color: rgba(255, 255, 255, 0.07);
+      }
+
+      .data-table-dark tr:hover td {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      /* Numbered list (agenda) */
+      .numbered-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .numbered-list li {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+
+      .numbered-list .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+
+      .agenda-timeline {
+        display: flex;
+        gap: 48px;
+        margin-top: 20px;
+      }
+
+      .agenda-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .agenda-col .numbered-list li {
+        font-size: 26px;
+      }
+
+      [data-index="7"] .list li {
+        font-size: 19px;
+      }
+
+      .agenda-col .numbered-list .num {
+        width: 38px;
+        height: 38px;
+        font-size: 17px;
+        border-radius: 8px;
+      }
+
+      /* Stat blocks */
+      .stat-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 16px;
+      }
+
+      .stat-block {
+        flex: 1;
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        padding: 20px;
+        background: var(--canvas);
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: -0.72px;
+        color: var(--ink);
+        line-height: 1.1;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        color: var(--ink-mute);
+        margin-top: 4px;
+      }
+
+      .stat-db {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+
+      /* Finding blocks */
+      .finding-block {
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        padding: 20px 24px;
+        background: var(--canvas);
+        margin-bottom: 16px;
+      }
+
+      .finding-block:last-child {
+        margin-bottom: 0;
+      }
+
+      .finding-num {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin-bottom: 6px;
+      }
+
+      .finding-title {
+        font-size: 17px;
+        font-weight: 500;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+
+      .finding-body {
+        font-size: 14px;
+        color: var(--ink-mute);
+        line-height: 1.5;
+      }
+
+      /* Pill */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 2px 10px;
+        border-radius: 9999px;
+      }
+
+      .pill-soft {
+        background: var(--canvas-soft);
+        color: var(--ink);
+        border: 1px solid var(--hairline);
+      }
+
+      /* Header */
+      #header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        backdrop-filter: blur(0.5px);
+        -webkit-backdrop-filter: blur(0.5px);
+        background: rgba(255, 255, 255, 0.36);
+        border-bottom: 1px solid var(--hairline);
+        z-index: 101;
+        transition:
+          background 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .header-project {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: color 0.3s ease;
+      }
+
+      .header-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--primary);
+        flex-shrink: 0;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 1px;
+      }
+
+      .header-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+        transition: color 0.3s ease;
+      }
+
+      .header-institution {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--ink-mute);
+        letter-spacing: 0.01em;
+        transition: color 0.3s ease;
+      }
+
+      /* Footer */
+      #footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        backdrop-filter: blur(0.5px);
+        -webkit-backdrop-filter: blur(0.5px);
+        background: rgba(255, 255, 255, 0.36);
+        border-top: 1px solid var(--hairline);
+        z-index: 101;
+        transition:
+          background 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .nav-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        border: 1px solid var(--hairline-strong);
+        border-radius: 6px;
+        color: var(--ink);
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+        flex-shrink: 0;
+      }
+
+      .nav-icon-btn:hover {
+        background: var(--canvas-soft);
+        border-color: var(--ink-faint);
+      }
+
+      .nav-icon-btn:disabled {
+        opacity: 0.3;
+        cursor: default;
+        background: transparent;
+      }
+
+      #btn-theme {
+        color: var(--ink-mute-2);
+      }
+
+      #counter {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--ink-mute);
+        min-width: 52px;
+        text-align: center;
+        font-family: "Inter", sans-serif;
+        transition: color 0.3s ease;
+      }
+
+      /* Dark mode */
+      .dark-mode {
+        --canvas: #1a1a1a;
+        --canvas-soft: #1f1f1f;
+        --canvas-night: #0f0f0f;
+        --canvas-night-soft: #151515;
+        --ink: #efefef;
+        --ink-secondary: #d0d0d0;
+        --ink-mute: rgba(255, 255, 255, 0.5);
+        --ink-mute-2: rgba(255, 255, 255, 0.38);
+        --ink-faint: rgba(255, 255, 255, 0.24);
+        --on-dark: #efefef;
+        --hairline: rgba(255, 255, 255, 0.08);
+        --hairline-strong: rgba(255, 255, 255, 0.14);
+        --hairline-cool: rgba(255, 255, 255, 0.06);
+      }
+
+      .dark-mode .slide-light,
+      .dark-mode .slide-soft {
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      }
+
+      .dark-mode .card-featured {
+        background: rgba(62, 207, 142, 0.09);
+        border-color: rgba(62, 207, 142, 0.28);
+      }
+
+      .dark-mode #header,
+      .dark-mode #footer {
+        background: rgba(26, 26, 26, 0.5);
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .dark-mode .header-project,
+      .dark-mode .header-name {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .dark-mode .header-institution {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .dark-mode #counter {
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .dark-mode .nav-icon-btn {
+        color: rgba(255, 255, 255, 0.65);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .dark-mode .nav-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* -----------------------------------------------
      SLIDE-SPECIFIC LAYOUTS
   ----------------------------------------------- */
 
-  /* Slide 1 — Capa */
-  .capa-title {
-    font-size: 52px;
-    font-weight: 500;
-    line-height: 1.1;
-    letter-spacing: -1.44px;
-    color: var(--ink);
-    max-width: 900px;
-    margin-bottom: 40px;
-  }
+      /* Slide 0 — Capa */
+      .capa-title {
+        font-size: 52px;
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -1.44px;
+        color: var(--ink);
+        max-width: 900px;
+        margin-bottom: 40px;
+      }
 
-  .capa-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: center;
-  }
+      .capa-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+      }
 
-  .capa-meta-item {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--ink-mute);
-  }
+      .capa-meta-item {
+        font-size: 16px;
+        font-weight: 400;
+        color: var(--ink-mute);
+      }
 
-  .capa-meta-name {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--ink);
-  }
+      .capa-meta-name {
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--ink);
+      }
 
-  /* Slide 9 dark code */
-  .infra-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    flex: 1;
-    min-height: 0;
-  }
+      /* Infra grid */
+      .infra-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+        min-height: 0;
+        align-content: start;
+      }
 
-  .infra-item {
-    background: var(--canvas-soft);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    padding: 20px 24px;
-  }
+      .infra-item {
+        background: var(--canvas-soft);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        padding: 20px 24px;
+        height: 180px;
+      }
 
-  .infra-item-title {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--primary);
-    margin-bottom: 10px;
-  }
+      .infra-item-title {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin-bottom: 10px;
+      }
 
-  .infra-item-body {
-    font-size: 14px;
-    color: var(--ink-mute);
-    line-height: 1.5;
-  }
+      .infra-item-body {
+        font-size: 14px;
+        color: var(--ink-mute);
+        line-height: 1.5;
+      }
 
-  /* Artefatos table on dark */
-  .artefacts-comparison {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 16px;
-  }
+      .infra-item-body code {
+        font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        background: var(--hairline-cool);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--ink);
+      }
 
-  .artefact-col-label {
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--ink-mute);
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--hairline);
-    margin-bottom: 10px;
-  }
+      /* Two col cards */
+      .two-col-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        flex: 1;
+        min-height: 0;
+        margin-top: 8px;
+      }
 
-  .artefact-entry {
-    font-size: 14px;
-    color: var(--ink);
-    line-height: 1.5;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--hairline-cool);
-  }
+      .limit-card {
+        background: var(--canvas-soft);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        padding: 24px;
+        height: 320px;
+      }
 
-  .artefact-value-bad {
-    font-weight: 500;
-    color: #ff6b6b;
-  }
+      .limit-card-title {
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-mute);
+        margin-bottom: 16px;
+      }
 
-  .artefact-value-good {
-    font-weight: 500;
-    color: var(--primary);
-  }
+      /* Thank you slide */
+      .thanks-repo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--canvas-soft);
+        border: 1px solid var(--hairline);
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+        font-size: 15px;
+        color: var(--ink);
+        margin: 20px auto 0;
+      }
 
-  /* Limitation section */
-  .two-col-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    flex: 1;
-    min-height: 0;
-    margin-top: 8px;
-  }
+      .thanks-repo .repo-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--primary);
+        flex-shrink: 0;
+      }
 
-  .limit-card {
-    background: var(--canvas-soft);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    padding: 24px;
-  }
+      /* Selection table */
+      .selection-table td strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
 
-  .limit-card-title {
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-    margin-bottom: 16px;
-  }
+      /* Spacing utilities */
+      .mt-4 {
+        margin-top: 4px;
+      }
+      .mt-8 {
+        margin-top: 8px;
+      }
+      .mt-12 {
+        margin-top: 12px;
+      }
+      .mt-16 {
+        margin-top: 16px;
+      }
+      .mt-20 {
+        margin-top: 20px;
+      }
+      .mt-24 {
+        margin-top: 24px;
+      }
+      .mt-32 {
+        margin-top: 32px;
+      }
+      .mb-8 {
+        margin-bottom: 8px;
+      }
+      .mb-12 {
+        margin-bottom: 12px;
+      }
+      .mb-16 {
+        margin-bottom: 16px;
+      }
+      .mb-24 {
+        margin-bottom: 24px;
+      }
+      .flex-1 {
+        flex: 1;
+      }
+      .min-h-0 {
+        min-height: 0;
+      }
+      .gap-8 {
+        gap: 8px;
+      }
+      .gap-12 {
+        gap: 12px;
+      }
+      .gap-16 {
+        gap: 16px;
+      }
+      .gap-20 {
+        gap: 20px;
+      }
+      .gap-24 {
+        gap: 24px;
+      }
+      .gap-32 {
+        gap: 32px;
+      }
 
-  /* Thank you slide */
-  .thanks-repo {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--canvas-soft);
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
-    font-size: 15px;
-    color: var(--ink);
-    margin: 20px auto 0;
-  }
+      @media (prefers-reduced-motion: reduce) {
+        .slide {
+          transform: none !important;
+          transition: opacity 0.15s ease;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="progress-bar"></div>
 
-  .thanks-repo .repo-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--primary);
-    flex-shrink: 0;
-  }
-
-  /* Heatmap image slide */
-  .heatmap-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-  }
-
-  /* Selection table */
-  .selection-table td strong {
-    color: var(--ink);
-    font-weight: 500;
-  }
-
-  /* Spacing utilities */
-  .mt-4  { margin-top: 4px; }
-  .mt-8  { margin-top: 8px; }
-  .mt-12 { margin-top: 12px; }
-  .mt-16 { margin-top: 16px; }
-  .mt-20 { margin-top: 20px; }
-  .mt-24 { margin-top: 24px; }
-  .mt-32 { margin-top: 32px; }
-  .mb-8  { margin-bottom: 8px; }
-  .mb-12 { margin-bottom: 12px; }
-  .mb-16 { margin-bottom: 16px; }
-  .mb-24 { margin-bottom: 24px; }
-  .flex-1 { flex: 1; }
-  .min-h-0 { min-height: 0; }
-  .gap-8  { gap: 8px; }
-  .gap-12 { gap: 12px; }
-  .gap-16 { gap: 16px; }
-  .gap-20 { gap: 20px; }
-  .gap-24 { gap: 24px; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .slide {
-      transform: none !important;
-      transition: opacity 0.15s ease;
-    }
-  }
-
-</style>
-</head>
-<body>
-
-<div id="progress-bar"></div>
-
-<header id="header">
-  <div class="header-project">
-    <span class="header-dot"></span>
-    Benchmark Reprodutível &middot; IoTDB, InfluxDB e TimescaleDB
-  </div>
-  <div class="header-right">
-    <span class="header-name">Luiz Fernando Klein</span>
-    <span class="header-institution">Ciência da Computação &middot; UFFS</span>
-  </div>
-</header>
-
-<div id="slides-container">
-
-  <!-- ============================================================
-       SLIDE 1 — Capa
-  ============================================================ -->
-  <div class="slide slide-light active" data-index="0">
-    <div class="slide-body-centered slide-capa">
-      <div style="margin-bottom: 20px;">
-        <span class="pill">TCC2 — Defesa</span>
+    <header id="header">
+      <div class="header-project">
+        <span class="header-dot"></span>
+        Análise Reprodutível &middot; IoTDB, InfluxDB e TimescaleDB
       </div>
-      <h1 class="capa-title">
-        Uma Análise <span class="accent">Reprodutível</span> de Apache IoTDB,
-        InfluxDB e TimescaleDB para Cargas de Trabalho IoT
-      </h1>
-      <div style="width: 48px; height: 2px; background: var(--hairline); margin: 0 auto 32px; border-radius: 1px;"></div>
-      <div class="capa-meta">
-        <span class="capa-meta-name">Luiz Fernando Klein</span>
-        <span class="capa-meta-item">Ciência da Computação — UFFS</span>
-        <span class="capa-meta-item">Chapecó, 2026</span>
-        <span class="capa-meta-item">Orientador: Prof. [nome do orientador]</span>
+      <div class="header-right">
+        <span class="header-name">Luiz Fernando Klein</span>
+        <span class="header-institution"
+          >Ciência da Computação &middot; UFFS</span
+        >
       </div>
-    </div>
-  </div>
+    </header>
 
-  <!-- ============================================================
-       SLIDE 2 — Agenda
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="1">
-    <div class="slide-body">
-      <div class="section-label">Apresentação</div>
-      <h2 class="display-lg slide-title">Agenda</h2>
-      <div class="divider"></div>
-      <div class="row" style="align-items: flex-start;">
-        <div class="col">
-          <ol class="numbered-list">
-            <li><span class="num">1</span> Contexto e motivação</li>
-            <li><span class="num">2</span> O que são Bancos de Dados de Séries Temporais?</li>
-            <li><span class="num">3</span> Trabalhos relacionados e lacuna de reprodutibilidade</li>
-            <li><span class="num">4</span> Objetivo e questões de pesquisa</li>
-            <li><span class="num">5</span> Metodologia</li>
-            <li><span class="num">6</span> Resultados</li>
-            <li><span class="num">7</span> Achados principais e conclusão</li>
-            <li><span class="num">8</span> Limitações e trabalhos futuros</li>
-          </ol>
+    <div id="slides-container">
+      <!-- Slide 0: Capa -->
+      <div class="slide slide-light active" data-index="0">
+        <div class="slide-body-centered">
+          <span class="pill mb-16">Defesa de TCC 2 &middot; 2026</span>
+          <div class="capa-title">
+            Uma Análise Comparativa Reprodutível de Apache IoTDB, InfluxDB e
+            TimescaleDB para Cargas de Trabalho IoT
+          </div>
+          <div class="capa-meta">
+            <span class="capa-meta-name">Luiz Fernando Klein</span>
+            <span class="capa-meta-item"
+              >Ciência da Computação &middot; UFFS &middot; Chapecó, 2026</span
+            >
+            <span class="capa-meta-item"
+              >Orientador: Prof. Dr. Geomar André Schreiner</span
+            >
+          </div>
         </div>
-        <div class="col col-40" style="display: flex; align-items: center; justify-content: center;">
-          <div style="text-align: center; padding: 32px;">
-            <div style="font-size: 13px; color: var(--ink-mute); margin-bottom: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;">Bancos avaliados</div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <div class="card" style="padding: 14px 20px; text-align: left;">
-                <div style="font-size: 13px; font-weight: 500; color: var(--ink);">Apache IoTDB 1.3</div>
-                <div style="font-size: 12px; color: var(--ink-mute); margin-top: 2px;">TsFile colunar</div>
+      </div>
+
+      <!-- Slide 1: Agenda -->
+      <div class="slide slide-soft" data-index="1">
+        <div class="slide-body">
+          <div class="slide-title">
+            <div class="display-xl">Agenda</div>
+          </div>
+          <div class="divider"></div>
+          <div class="agenda-timeline">
+            <div class="agenda-col">
+              <ol class="numbered-list" style="gap: 36px; font-size: 26px">
+                <li><span class="num">1</span>Introdução</li>
+                <li><span class="num">2</span>Fundamentação Teórica</li>
+                <li><span class="num">3</span>Trabalhos Relacionados</li>
+              </ol>
+            </div>
+            <div class="agenda-col">
+              <ol class="numbered-list" style="gap: 36px; font-size: 26px">
+                <li><span class="num">4</span>Metodologia</li>
+                <li><span class="num">5</span>Experimentos</li>
+                <li><span class="num">6</span>Conclusão</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Motivação IoT -->
+      <div class="slide slide-light" data-index="2">
+        <div class="slide-body">
+          <div class="section-label">Introdução</div>
+          <div class="slide-title display-lg">Explosão IoT</div>
+          <div class="divider"></div>
+          <div class="row" style="gap: 48px">
+            <div class="col col-40" style="justify-content: center">
+              <div
+                class="stat-block"
+                style="
+                  margin-bottom: 28px;
+                  text-align: center;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  flex: none;
+                  padding: 40px 20px;
+                "
+              >
+                <div
+                  class="stat-value"
+                  style="
+                    font-size: 56px;
+                    color: var(--primary);
+                    letter-spacing: -2px;
+                  "
+                >
+                  500 bi
+                </div>
+                <div class="stat-label" style="margin-top: 8px">
+                  Dispositivos conectados projetados até 2030 (Cisco)
+                </div>
               </div>
-              <div class="card" style="padding: 14px 20px; text-align: left;">
-                <div style="font-size: 13px; font-weight: 500; color: var(--ink);">InfluxDB 2.7</div>
-                <div style="font-size: 12px; color: var(--ink-mute); margin-top: 2px;">TSM + HTTP</div>
-              </div>
-              <div class="card" style="padding: 14px 20px; text-align: left;">
-                <div style="font-size: 13px; font-weight: 500; color: var(--ink);">TimescaleDB (PG 15)</div>
-                <div style="font-size: 12px; color: var(--ink-mute); margin-top: 2px;">Hipertabelas + WAL</div>
+              <ul class="list" style="gap: 10px">
+                <li>90% dos veículos conectados em 2030</li>
+                <li>15 dispositivos por pessoa (Telefonica)</li>
+                <li>
+                  Saúde inteligente, cidades inteligentes e IoT industrial
+                </li>
+                <li>
+                  Os dados que antes eram coletados a cada 10 minutos agora são
+                  coletados a cada segundo.
+                </li>
+              </ul>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: center; justify-content: center"
+            >
+              <div class="img-card" style="width: 100%; height: 100%">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/projecao-iot.png"
+                  alt="Projeção IoT"
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 3 — Contexto: Explosão IoT
-  ============================================================ -->
-  <div class="slide slide-light" data-index="2">
-    <div class="slide-body">
-      <div class="section-label">Contexto e motivação</div>
-      <h2 class="display-lg slide-title">Explosão IoT</h2>
-      <div class="divider"></div>
-      <div class="row" style="align-items: flex-start; gap: 48px;">
-        <div class="col col-50" style="display: flex; flex-direction: column; gap: 16px; justify-content: center;">
-          <ul class="list list-lg">
-            <li>Dispositivos IoT crescem exponencialmente: Cisco projeta <strong>500 bilhões</strong> de dispositivos conectados até 2030</li>
-            <li>Sensores industriais, veículos, saúde, cidades inteligentes: todos geram fluxos contínuos de dados temporais</li>
-            <li>O que antes levava 10 min para ser coletado hoje é gerado <strong>a cada segundo</strong></li>
-          </ul>
-        </div>
-        <div class="col col-50" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="max-width: 100%; max-height: 380px; width: 100%;">
-            <img src="../../tcc2-latex/figures/pt_br/projecao-iot.png" alt="Projeção IoT" style="max-height: 360px;">
+      <!-- Slide 3: Dados Temporais e Limitações -->
+      <div class="slide slide-soft" data-index="3">
+        <div class="slide-body">
+          <div class="section-label">Introdução</div>
+          <div class="slide-title display-lg">
+            Dados Temporais e Limitações do Modelo Relacional
+          </div>
+          <div class="divider"></div>
+          <div class="row" style="gap: 40px; align-items: flex-start">
+            <div class="col col-50" style="justify-content: flex-start">
+              <div class="heading-md mb-8">Séries temporais</div>
+              <div class="body-md mb-24" style="color: var(--ink-mute)">
+                Sequências de valores indexados por tempo, frequentemente com
+                precisão de milissegundos.
+              </div>
+              <div class="heading-md mb-12">
+                Limitações dos SGBDs relacionais
+              </div>
+              <ul class="list mb-20" style="gap: 10px">
+                <li>Indexação ineficiente para padrões de acesso temporal</li>
+                <li>Alto custo de armazenamento histórico de longo prazo</li>
+                <li>
+                  Sem funções temporais nativas (retenção, subamostragem,
+                  compressão)
+                </li>
+              </ul>
+              <div class="card-featured" style="margin-top: 24px">
+                <div class="heading-md">Resposta: BDSTs</div>
+                <div class="caption mt-4">
+                  Bancos de Dados de Séries Temporais são projetados desde a
+                  concepção para dados temporais
+                </div>
+              </div>
+            </div>
+            <div class="col flex-1 min-h-0" style="gap: 16px">
+              <div class="img-card flex-1 min-h-0" style="width: 100%">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/dado_temporal.png"
+                  alt="Dado temporal"
+                />
+              </div>
+              <div class="img-card flex-1 min-h-0" style="width: 100%">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/registro_temporal.png"
+                  alt="Registro temporal"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 4 — O Problema: Dados Temporais em Escala
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="3">
-    <div class="slide-body">
-      <div class="section-label">Contexto e motivação</div>
-      <h2 class="display-lg slide-title">Dados Temporais em Escala</h2>
-      <div class="divider"></div>
-      <div class="row" style="align-items: flex-start; gap: 48px;">
-        <div class="col col-50" style="display: flex; flex-direction: column; gap: 16px; justify-content: center;">
-          <ul class="list list-lg">
-            <li>Dados de séries temporais: sequências de medições indexadas pelo tempo, geralmente com precisão de <strong>milissegundos</strong></li>
-            <li>Bancos relacionais tradicionais sofrem com: indexação ineficiente, alto custo de armazenamento histórico, falta de funções temporais nativas</li>
-            <li>BDSTs foram criados especificamente para este problema</li>
-          </ul>
-        </div>
-        <div class="col col-50" style="display: flex; flex-direction: column; gap: 16px; align-items: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 180px;">
-            <img src="../../tcc2-latex/figures/pt_br/dado_temporal.png" alt="Exemplo de dado temporal" style="max-height: 165px;">
+      <!-- Slide 4: Os 3 Bancos -->
+      <div class="slide slide-light" data-index="4">
+        <div class="slide-body">
+          <div class="section-label">Introdução</div>
+          <div class="slide-title display-lg">Os Três Bancos Avaliados</div>
+          <div class="divider"></div>
+          <table class="data-table data-table-spacious mb-24">
+            <thead>
+              <tr>
+                <th>Banco</th>
+                <th>Arquitetura central</th>
+                <th>Origem</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-strong">Apache IoTDB 1.3</td>
+                <td>TsFile colunar + Thrift RPC</td>
+                <td>IoT industrial</td>
+              </tr>
+              <tr>
+                <td class="td-strong">InfluxDB 2.7</td>
+                <td>TSM (Time-Structured Merge Tree) + HTTP</td>
+                <td>Padrão de referência na literatura</td>
+              </tr>
+              <tr>
+                <td class="td-strong">TimescaleDB (PG 15)</td>
+                <td>Hipertabelas sobre PostgreSQL + WAL</td>
+                <td>SQL completo + ecossistema relacional</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="stat-row">
+            <div class="stat-block" style="text-align: center">
+              <div class="stat-db">InfluxDB</div>
+              <div class="stat-value" style="color: var(--primary)">4/6</div>
+              <div class="stat-label">Estudos revisados</div>
+            </div>
+            <div class="stat-block" style="text-align: center">
+              <div class="stat-db">IoTDB</div>
+              <div class="stat-value" style="color: var(--primary)">2/6</div>
+              <div class="stat-label">Estudos mais recentes (2023)</div>
+            </div>
+            <div class="stat-block" style="text-align: center">
+              <div class="stat-db">TimescaleDB</div>
+              <div class="stat-value" style="color: var(--primary)">4/6</div>
+              <div class="stat-label">Estudos revisados</div>
+            </div>
           </div>
-          <div class="img-card" style="width: 100%; max-height: 180px;">
-            <img src="../../tcc2-latex/figures/pt_br/registro_temporal.png" alt="Registro temporal" style="max-height: 165px;">
+          <div class="caption mt-16" style="text-align: center">
+            Cada banco representa uma abordagem arquitetural distinta para o
+            mesmo problema.
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 5 — Os Três Bancos Avaliados
-  ============================================================ -->
-  <div class="slide slide-light" data-index="4">
-    <div class="slide-body">
-      <div class="section-label">Bancos de dados avaliados</div>
-      <h2 class="display-lg slide-title">Os Três Bancos Avaliados</h2>
-      <div class="divider"></div>
-      <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; min-height: 0;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Banco</th>
-              <th>Arquitetura</th>
-              <th>Destaque</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="td-strong">Apache IoTDB 1.3</td>
-              <td>TsFile colunar + Thrift RPC</td>
-              <td>Criado para IoT industrial (Tsinghua)</td>
-            </tr>
-            <tr>
-              <td class="td-strong">InfluxDB 2.7</td>
-              <td>TSM (Time-Structured Merge Tree) + HTTP</td>
-              <td>Padrão de referência na literatura</td>
-            </tr>
-            <tr>
-              <td class="td-strong">TimescaleDB (PG 15)</td>
-              <td>Hipertabelas sobre PostgreSQL + WAL</td>
-              <td>SQL completo + ecossistema relacional</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="row" style="flex: 0 0 auto; gap: 16px; margin-top: 8px;">
-          <div class="card" style="flex: 1; padding: 16px 20px;">
-            <div style="font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Abordagem</div>
-            <div style="font-size: 14px; color: var(--ink);">Cada banco representa uma abordagem arquitetural distinta</div>
-          </div>
-          <div class="card" style="flex: 1; padding: 16px 20px;">
-            <div style="font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Seleção</div>
-            <div style="font-size: 14px; color: var(--ink);">Selecionados por proeminência nos estudos comparativos recentes</div>
+      <!-- Slide 5: Lacuna de Reprodutibilidade -->
+      <div class="slide slide-soft" data-index="5">
+        <div class="slide-body">
+          <div class="section-label">Introdução</div>
+          <div class="slide-title display-lg">Lacuna de Reprodutibilidade</div>
+          <div class="divider"></div>
+          <div class="row" style="gap: 56px; align-items: center">
+            <div
+              class="col col-40"
+              style="
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+              "
+            >
+              <div
+                style="
+                  font-size: 108px;
+                  font-weight: 500;
+                  letter-spacing: -4px;
+                  line-height: 1;
+                  color: var(--primary);
+                "
+              >
+                1/6
+              </div>
+              <div class="heading-md mt-12" style="color: var(--ink-mute)">
+                Estudos totalmente reprodutíveis
+              </div>
+              <div class="caption mt-4">(Pereira 2023)</div>
+            </div>
+            <div class="col flex-1 min-h-0">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Reprodutibilidade</th>
+                    <th>Estudos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Total</td>
+                    <td class="td-strong" style="color: var(--primary)">1</td>
+                  </tr>
+                  <tr>
+                    <td>Parcial</td>
+                    <td class="td-strong">2</td>
+                  </tr>
+                  <tr>
+                    <td>Nenhuma</td>
+                    <td class="td-strong">3</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured" style="margin-top: 24px">
+                <div class="heading-md mb-12">Consequências</div>
+                <ul class="list" style="gap: 8px">
+                  <li>
+                    Resultados não podem ser validados de forma independente
+                  </li>
+                  <li>Impossível comparar descobertas entre estudos</li>
+                  <li>
+                    Experimentos não se adaptam a novo hardware ou versões
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 6 — Trabalhos Relacionados: Lacuna de Reprodutibilidade
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="5">
-    <div class="slide-body">
-      <div class="section-label">Trabalhos relacionados</div>
-      <h2 class="display-lg slide-title">Lacuna de Reprodutibilidade</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col" style="display: flex; flex-direction: column; gap: 16px;">
-          <ul class="list list-lg">
-            <li>5 estudos comparativos recentes analisados (Naqvi 2017, Shah 2022, Lima 2024, Wang 2023, Pereira 2023)</li>
-            <li>Apenas <strong>1 de 5</strong> publicou scripts e configurações suficientes para replicação independente</li>
-            <li>Problemas comuns: configurações descritas em prosa vaga, sem versões fixadas, ferramentas com acesso institucional restrito</li>
-          </ul>
-          <div style="background: var(--canvas); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 24px; margin-top: 8px;">
-            <div style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-mute); margin-bottom: 8px;">Implicação</div>
-            <div style="font-size: 16px; font-weight: 500; color: var(--ink); line-height: 1.45;">Sem reprodutibilidade: resultados não podem ser validados nem comparados entre estudos</div>
+      <!-- Slide 6: Escopo 9×3×Isolamento -->
+      <div class="slide slide-light" data-index="6">
+        <div class="slide-body">
+          <div class="section-label">Introdução</div>
+          <div class="slide-title display-lg">Escopo do Estudo</div>
+          <div class="divider"></div>
+          <div class="stat-row mb-24" style="gap: 24px">
+            <div class="stat-block" style="text-align: center">
+              <div
+                class="stat-value"
+                style="
+                  font-size: 56px;
+                  color: var(--primary);
+                  letter-spacing: -2px;
+                "
+              >
+                9
+              </div>
+              <div class="stat-label" style="margin-top: 8px">
+                Tipos de carga de trabalho
+              </div>
+              <div class="caption mt-4">4 escrita &middot; 5 leitura</div>
+            </div>
+            <div class="stat-block" style="text-align: center">
+              <div
+                class="stat-value"
+                style="
+                  font-size: 56px;
+                  color: var(--primary);
+                  letter-spacing: -2px;
+                "
+              >
+                3
+              </div>
+              <div class="stat-label" style="margin-top: 8px">
+                Escalas de volume
+              </div>
+              <div class="caption mt-4">
+                Variação de ~100 vezes entre pequena e grande
+              </div>
+            </div>
+            <div class="stat-block" style="text-align: center">
+              <div
+                class="stat-value"
+                style="
+                  font-size: 56px;
+                  color: var(--primary);
+                  letter-spacing: -2px;
+                "
+              >
+                27
+              </div>
+              <div class="stat-label" style="margin-top: 8px">
+                Execuções totais
+              </div>
+              <div class="caption mt-4">
+                Isolamento sequencial de contêineres
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="col col-40" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px;">
-          <div style="text-align: center;">
-            <div style="font-size: 80px; font-weight: 500; letter-spacing: -3px; color: var(--ink); line-height: 1;">1/5</div>
-            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px; line-height: 1.4; max-width: 200px;">estudos com dados suficientes para replicação independente</div>
-          </div>
-          <div class="divider" style="width: 80px; background: var(--hairline);"></div>
-          <div style="text-align: center;">
-            <div style="font-size: 48px; font-weight: 500; letter-spacing: -1.44px; color: var(--primary); line-height: 1;">4/5</div>
-            <div style="font-size: 14px; color: var(--ink-mute); margin-top: 8px;">estudos não reprodutíveis</div>
+          <div class="card-featured">
+            <div class="heading-md mb-8">
+              Isolamento: de conveniência a pré-requisito
+            </div>
+            <div class="body-md" style="color: var(--ink-mute)">
+              Descoberto experimentalmente: contêineres concorrentes produziram
+              conclusões enganosas. O isolamento sequencial foi adotado como
+              pré-requisito para resultados válidos.
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 7 — Objetivo e Questoes de Pesquisa
-  ============================================================ -->
-  <div class="slide slide-light" data-index="6">
-    <div class="slide-body">
-      <div class="section-label">Objetivo</div>
-      <h2 class="display-lg slide-title">Objetivo e Questões de Pesquisa</h2>
-      <div class="divider"></div>
-      <div style="background: var(--canvas-soft); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 28px; margin-bottom: 24px;">
-        <div style="font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;">Objetivo</div>
-        <div style="font-size: 18px; font-weight: 500; color: var(--ink); line-height: 1.4;">Comparação controlada e <span class="accent">reprodutível</span> dos três BDSTs em cargas de trabalho IoT realistas</div>
-      </div>
-      <div>
-        <div style="font-size: 14px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;">Questões respondidas</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q1</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Qual banco tem maior vazão de escrita e como ela escala?</div>
+      <!-- Slide 7: Bancos de Dados e Sistemas Distribuídos -->
+      <div class="slide slide-soft" data-index="7">
+        <div class="slide-body">
+          <div class="section-label">Fundamentação Teórica</div>
+          <div class="slide-title display-lg">
+            Bancos de Dados e Sistemas Distribuídos
           </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q2</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais são as latências de leitura e como crescem com o volume?</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q3</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">Quais escolhas arquiteturais explicam as diferenças?</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div style="font-size: 11px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Q4</div>
-            <div style="font-size: 15px; color: var(--ink); line-height: 1.4;">As escolhas metodológicas do benchmark afetam os resultados?</div>
+          <div class="divider"></div>
+          <div class="row" style="gap: 32px; align-items: flex-start">
+            <div class="col flex-1">
+              <div class="heading-md mb-12">Bancos de Dados</div>
+              <ul class="list" style="gap: 20px; font-size: 16px">
+                <li>
+                  SGBD: armazenamento e recuperação eficientes de grandes
+                  coleções de dados (Ramakrishnan 2003)
+                </li>
+                <li>
+                  Modelo relacional: tabelas, esquemas, integridade referencial
+                  e SQL
+                </li>
+                <li>
+                  Independência de dados, acesso concorrente seguro e
+                  recuperação de falhas
+                </li>
+              </ul>
+            </div>
+            <div class="col flex-1">
+              <div class="heading-md mb-12">Bancos de Dados Distribuídos</div>
+              <ul class="list" style="gap: 20px; font-size: 16px">
+                <li>
+                  Múltiplos nós com bancos locais e esquema comum (Özsu 2011)
+                </li>
+                <li>Vantagem: localidade de dados e paralelismo entre nós</li>
+                <li>Desafio: consistência da replicação vs. desempenho</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 8 — Metodologia: 9 Testes × 3 Escalas
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="7">
-    <div class="slide-body">
-      <div class="section-label">Metodologia</div>
-      <h2 class="display-lg slide-title">9 Testes x 3 Escalas</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 32px; align-items: flex-start;">
-        <div class="col col-40" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card" style="padding: 18px 20px;">
-            <div style="font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Testes de escrita (4)</div>
-            <ul class="list" style="gap: 8px;">
-              <li style="font-size: 14px;">Sequencial</li>
-              <li style="font-size: 14px;">Fora de ordem</li>
-              <li style="font-size: 14px;">Lote pequeno (B=1)</li>
-              <li style="font-size: 14px;">Lote grande (B=1000)</li>
-            </ul>
-          </div>
-          <div class="card" style="padding: 18px 20px;">
-            <div style="font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Testes de leitura (5)</div>
-            <ul class="list" style="gap: 8px;">
-              <li style="font-size: 14px;">Último valor</li>
-              <li style="font-size: 14px;">Subamostragem</li>
-              <li style="font-size: 14px;">Intervalo de tempo</li>
-              <li style="font-size: 14px;">Filtro de valor</li>
-              <li style="font-size: 14px;">Leitura geral</li>
-            </ul>
+      <!-- Slide 9: Arquiteturas dos 3 Bancos -->
+      <div class="slide slide-light" data-index="9">
+        <div class="slide-body">
+          <div class="section-label">Fundamentação Teórica</div>
+          <div class="slide-title display-lg">Arquiteturas dos Três Bancos</div>
+          <div class="divider"></div>
+          <table class="data-table mb-20" style="font-size: 13px">
+            <thead>
+              <tr>
+                <th>Banco</th>
+                <th>Escrita</th>
+                <th>Leitura</th>
+                <th>Durabilidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-strong">IoTDB</td>
+                <td>
+                  Memtable JVM + flush assíncrono para TsFile colunar via Thrift
+                  RPC
+                </td>
+                <td>Estatísticas min/max por bloco: eliminação de blocos</td>
+                <td>Diferida</td>
+              </tr>
+              <tr>
+                <td class="td-strong">InfluxDB</td>
+                <td>
+                  Cache TSM em memória + compactação para arquivos imutáveis via
+                  HTTP
+                </td>
+                <td>TSI; sem atalho para último valor</td>
+                <td>Diferida (cache TSM)</td>
+              </tr>
+              <tr>
+                <td class="td-strong">TimescaleDB</td>
+                <td>TCP + SQL + WAL + MVCC via JDBC sobre PostgreSQL</td>
+                <td>
+                  Eliminação de blocos de hipertabela por tempo; B-tree/BRIN
+                </td>
+                <td>Síncrona (WAL antes do ACK)</td>
+              </tr>
+            </tbody>
+          </table>
+          <div
+            class="card-featured"
+            style="text-align: center; margin-top: 24px"
+          >
+            <div class="heading-md mb-8">Trade-off central</div>
+            <div class="body-md" style="color: var(--ink-mute)">
+              <strong>Durabilidade diferida</strong> = maior vazão
+              &nbsp;&middot;&nbsp; <strong>WAL síncrono</strong> = garantia
+              forte, menor vazão
+            </div>
           </div>
         </div>
-        <div class="col" style="display: flex; flex-direction: column; justify-content: flex-start; gap: 12px;">
-          <div style="font-size: 14px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Escalas de teste</div>
-          <table class="data-table">
+      </div>
+
+      <!-- Slide 10: Benchmarks Princípios e Armadilhas -->
+      <div class="slide slide-soft" data-index="10">
+        <div class="slide-body">
+          <div class="section-label">Fundamentação Teórica</div>
+          <div class="slide-title display-lg">
+            Benchmarks: Princípios e Armadilhas
+          </div>
+          <div class="divider"></div>
+          <div class="card-featured" style="margin-bottom: 24px">
+            <div class="body-md">
+              Um bom benchmark deve ter:
+              <strong>portabilidade, clareza e escalabilidade</strong>
+              (Ramakrishnan 2003)
+            </div>
+          </div>
+          <div class="heading-md mb-16">
+            5 armadilhas recorrentes (Shapira 2016)
+          </div>
+          <ol class="numbered-list" style="gap: 12px">
+            <li>
+              <span class="num">1</span>Comparar configurações que diferem em
+              múltiplos parâmetros simultaneamente
+            </li>
+            <li>
+              <span class="num">2</span>Testar em escala insuficiente e
+              extrapolar os resultados
+            </li>
+            <li>
+              <span class="num">3</span>Aceitar resultados suspeitos sem
+              questionar a origem
+            </li>
+            <li>
+              <span class="num">4</span>Usar cargas de trabalho artificiais
+              desconectadas do uso real
+            </li>
+            <li>
+              <span class="num">5</span>Comunicar resultados de forma incompleta
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Slide 11: Processo de Pesquisa -->
+      <div class="slide slide-light" data-index="11">
+        <div class="slide-body">
+          <div class="section-label">Trabalhos Relacionados</div>
+          <div class="slide-title display-lg">Processo de Pesquisa</div>
+          <div class="divider"></div>
+          <div class="row" style="gap: 48px; align-items: stretch">
+            <div
+              class="col col-40"
+              style="
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 20px;
+                  margin-bottom: 12px;
+                "
+              >
+                <div style="text-align: center">
+                  <div
+                    style="
+                      font-size: 64px;
+                      font-weight: 500;
+                      letter-spacing: -2.5px;
+                      color: var(--ink);
+                      line-height: 1;
+                    "
+                  >
+                    23
+                  </div>
+                  <div class="caption mt-4">Resultados lidos</div>
+                </div>
+                <div
+                  style="
+                    font-size: 36px;
+                    color: var(--primary);
+                    font-weight: 300;
+                  "
+                >
+                  &rarr;
+                </div>
+                <div style="text-align: center">
+                  <div
+                    style="
+                      font-size: 64px;
+                      font-weight: 500;
+                      letter-spacing: -2.5px;
+                      color: var(--primary);
+                      line-height: 1;
+                    "
+                  >
+                    7
+                  </div>
+                  <div class="caption mt-4">Selecionados</div>
+                </div>
+              </div>
+              <div class="caption" style="max-width: 220px; margin-top: 24px">
+                <span style="font-weight: 600; color: var(--ink)"
+                  >Keywords (Google Scholar):</span
+                ><br /><span style="display: block; margin-top: 5px"></span>
+                "data streaming" · "timeseries" · "timeseries databases"<br />
+                ordenados por citações
+              </div>
+            </div>
+            <div class="col flex-1">
+              <div class="heading-md mb-16">3 categorias de análise</div>
+              <div class="card mb-12" style="padding: 16px 20px">
+                <div class="stat-db">Funcionalidade</div>
+                <div class="body-md mt-4">
+                  Petre 2019: modelo de maturidade de 6 BDSTs, 18 atributos
+                </div>
+              </div>
+              <div class="card mb-12" style="padding: 16px 20px">
+                <div class="stat-db">Desempenho</div>
+                <div class="body-md mt-4">
+                  6 benchmarks controlados ou comparações em cenários reais
+                </div>
+                <div class="caption mt-4">
+                  Lima 2024 &middot; Shah 2022 &middot; Naqvi 2017 &middot;
+                  Grzesik 2020 &middot; Pereira 2023 &middot; Wang 2023
+                </div>
+              </div>
+              <div class="card" style="padding: 16px 20px">
+                <div class="stat-db">Comparativa</div>
+                <div class="body-md mt-4">
+                  Síntese dos 6 estudos de desempenho na tabela a seguir
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 12: Tabela Comparativa dos Estudos -->
+      <div class="slide slide-soft" data-index="12">
+        <div class="slide-body">
+          <div class="section-label">Trabalhos Relacionados</div>
+          <div class="slide-title display-lg">
+            Tabela Comparativa dos Estudos
+          </div>
+          <div class="divider"></div>
+          <table class="data-table data-table-compact mb-20">
+            <thead>
+              <tr>
+                <th>Autor</th>
+                <th>Ano</th>
+                <th>Reprodutibilidade</th>
+                <th>Ferramentas</th>
+                <th>Líder</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-strong">Lima</td>
+                <td>2024</td>
+                <td>Parcial</td>
+                <td>Apache JMeter</td>
+                <td>InfluxDB</td>
+              </tr>
+              <tr>
+                <td class="td-strong">Pereira</td>
+                <td>2023</td>
+                <td style="color: var(--primary); font-weight: 500">Total</td>
+                <td>MulletBench, Ansible, Docker</td>
+                <td>IoTDB</td>
+              </tr>
+              <tr>
+                <td class="td-strong">Wang</td>
+                <td>2023</td>
+                <td>Parcial</td>
+                <td>TSBS</td>
+                <td>IoTDB</td>
+              </tr>
+              <tr>
+                <td class="td-strong">Shah</td>
+                <td>2022</td>
+                <td>Nenhuma</td>
+                <td>Python timeseries-generator</td>
+                <td>InfluxDB</td>
+              </tr>
+              <tr>
+                <td class="td-strong">Grzesik</td>
+                <td>2020</td>
+                <td>Nenhuma</td>
+                <td>Manual</td>
+                <td>PostgreSQL</td>
+              </tr>
+              <tr>
+                <td class="td-strong">Naqvi</td>
+                <td>2017</td>
+                <td>Nenhuma</td>
+                <td>Telegraf, Kapacitor</td>
+                <td>InfluxDB</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="row gap-16" style="flex-shrink: 0; margin-top: 24px">
+            <div class="card flex-1" style="padding: 16px 20px; height: 120px">
+              <div class="stat-db">Padrão temporal</div>
+              <div class="body-md mt-4">
+                IoTDB lidera nos 2 mais recentes; InfluxDB nos 3 anteriores
+              </div>
+            </div>
+            <div class="card flex-1" style="padding: 16px 20px; height: 120px">
+              <div class="stat-db">3 lacunas identificadas</div>
+              <div class="body-md mt-4">
+                Apenas 1/6 totalmente reprodutível; sem benchmark com os 3
+                juntos; sem análise de impacto metodológico
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 13: Objetivo Metodológico -->
+      <div class="slide slide-soft" data-index="13">
+        <div class="slide-body-centered">
+          <div class="section-label">Metodologia</div>
+          <div class="display-xl mb-16" style="text-align: center">
+            Objetivo Metodológico
+          </div>
+          <div class="divider" style="margin: 0 auto 24px"></div>
+          <div
+            class="body-lg mb-32"
+            style="color: var(--ink-mute); max-width: 620px; text-align: center"
+          >
+            Caracterizar quais compromissos arquiteturais favorecem quais perfis
+            de aplicação IoT
+          </div>
+          <div
+            class="row gap-24"
+            style="
+              max-width: 720px;
+              max-height: 180px;
+              flex-shrink: 0;
+              margin-top: 24px;
+            "
+          >
+            <div
+              class="card flex-1"
+              style="text-align: center; padding: 32px 24px; height: 180px"
+            >
+              <div class="stat-db mb-12">Pilar 1</div>
+              <div class="heading-lg mb-8">Medição de desempenho</div>
+              <div class="caption">
+                Vazão, latência e recursos em 9 padrões e 3 escalas
+              </div>
+            </div>
+            <div
+              class="card flex-1"
+              style="text-align: center; padding: 32px 24px; height: 180px"
+            >
+              <div class="stat-db mb-12">Pilar 2</div>
+              <div class="heading-lg mb-8">Reprodutibilidade</div>
+              <div class="caption">
+                Versões fixadas, ambiente público e isolamento sequencial
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 14: Infraestrutura Reprodutível -->
+      <div class="slide slide-soft" data-index="14">
+        <div class="slide-body">
+          <div class="section-label">Metodologia</div>
+          <div class="slide-title display-lg">Infraestrutura Reprodutível</div>
+          <div class="divider"></div>
+          <div class="infra-grid">
+            <div class="infra-item">
+              <div class="infra-item-title">Docker Compose</div>
+              <div class="infra-item-body">
+                Versões de imagem fixadas: <code>iotdb:1.3.0-standalone</code>,
+                <code>influxdb:2.7-alpine</code>,
+                <code>timescaledb:latest-pg15</code>. Contêineres iniciados e
+                parados sequencialmente, apenas um ativo por vez.
+              </div>
+            </div>
+            <div class="infra-item">
+              <div class="infra-item-title">Nix Flake</div>
+              <div class="infra-item-body">
+                Ambiente declarativo com lock fixado: Java 17, Maven, Python 3,
+                Docker com todas as dependências transitivas versionadas.
+                <code>nix develop</code> garante ambiente idêntico em qualquer
+                máquina Linux.
+              </div>
+            </div>
+            <div class="infra-item">
+              <div class="infra-item-title">Python CLI</div>
+              <div class="infra-item-body">
+                <code>benchmark.py</code> orquestra os 27 testes:<br /><br /><code
+                  style="
+                    display: block;
+                    background: var(--hairline-cool);
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    margin-top: 4px;
+                  "
+                  >python3 benchmark.py --scale large</code
+                >
+              </div>
+            </div>
+            <div class="infra-item">
+              <div class="infra-item-title">Repositório público</div>
+              <div class="infra-item-body">
+                Scripts, configurações Docker, ambiente Nix e dados de
+                resultados disponíveis para replicação.<br /><br /><code
+                  style="display: block; margin-top: 4px"
+                  >github.com/LuizFerK/iot-benchrunner</code
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 15: iot-benchmark -->
+      <div class="slide slide-light" data-index="15">
+        <div class="slide-body">
+          <div class="section-label">Metodologia</div>
+          <div class="slide-title display-lg">Ferramenta: iot-benchmark</div>
+          <div class="divider"></div>
+          <div class="row gap-40">
+            <div class="col col-55">
+              <div class="card-featured mb-16">
+                <div class="heading-md mb-8">Por que iot-benchmark?</div>
+                <div class="body-md" style="color: var(--ink-mute)">
+                  Suporte nativo aos 3 bancos nos seus protocolos corretos.
+                  Fundamentado no <strong>YCSB</strong>, adaptado ao contexto de
+                  séries temporais IoT.
+                </div>
+              </div>
+              <div class="heading-md mb-12">Protocolos nativos</div>
+              <table class="data-table mb-20" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Protocolo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>Session API — Thrift RPC (SESSION_BY_TABLET)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>Line protocol HTTP</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">TimescaleDB</td>
+                    <td>JDBC</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col flex-1">
+              <div class="heading-md mb-12">Alternativas rejeitadas</div>
+              <div class="card mb-12" style="padding: 16px 20px">
+                <div class="stat-db">TSBS</div>
+                <div class="body-md mt-4">
+                  Framework maduro, mas sem suporte ao IoTDB.
+                </div>
+              </div>
+              <div class="card mb-20" style="padding: 16px 20px">
+                <div class="stat-db">Apache JMeter</div>
+                <div class="body-md mt-4">
+                  Lida bem com HTTP, mas requer scripts personalizados para
+                  Thrift e JDBC, introduzindo sobrecarga específica da
+                  ferramenta.
+                </div>
+              </div>
+              <div class="heading-md mb-8 mt-16">Saídas</div>
+              <ul class="list" style="gap: 8px">
+                <li>Vazão: operações totais, tempo decorrido, pts/s</li>
+                <li>Latência: média, mín, máx, P99 por tipo</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 16: 9 Cargas de Trabalho -->
+      <div class="slide slide-soft" data-index="16">
+        <div class="slide-body">
+          <div class="section-label">Metodologia</div>
+          <div class="slide-title display-lg">
+            9 Cargas de Trabalho e Rationale
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-24" style="align-items: flex-start">
+            <div class="col col-50">
+              <div class="heading-md mb-12">Escrita (4)</div>
+              <table class="data-table" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Carga</th>
+                    <th>Rationale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">write</td>
+                    <td>Ingestão sequencial: linha de base de vazão bruta</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">out-of-order</td>
+                    <td>
+                      20% pontos atrasados (Poisson): sensores LPWAN/celular
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">batch-small</td>
+                    <td>
+                      LOTE=1: isola sobrecarga de protocolo por requisição
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">batch-large</td>
+                    <td>
+                      LOTE=1000: teto de eficiência em carregamento em lote
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col flex-1">
+              <div class="heading-md mb-12">Leitura (5)</div>
+              <table class="data-table" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Carga</th>
+                    <th>Rationale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">latest-point</td>
+                    <td>Estado atual do sensor: monitoramento fundamental</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">downsample</td>
+                    <td>GROUP BY janela de tempo: painel de análise</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">range-query</td>
+                    <td>Todos os pontos em janela: exportação histórica</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">value-filter</td>
+                    <td>
+                      Predicado sobre valores (temp &gt; 85): alertas por limiar
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">read</td>
+                    <td>10 tipos com peso igual: linha de base mista</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 17: Escalas e Métricas -->
+      <div class="slide slide-light" data-index="17">
+        <div class="slide-body">
+          <div class="section-label">Metodologia</div>
+          <div class="slide-title display-lg">Escalas e Métricas</div>
+          <div class="divider"></div>
+          <table class="data-table mb-24">
             <thead>
               <tr>
                 <th>Escala</th>
                 <th>Clientes</th>
                 <th>Dispositivos</th>
                 <th>Sensores</th>
+                <th>Laços</th>
                 <th>Dados totais</th>
               </tr>
             </thead>
@@ -1239,549 +1976,1136 @@
                 <td>5</td>
                 <td>10</td>
                 <td>10</td>
-                <td>~50k pts</td>
+                <td>1.000</td>
+                <td>~50 k pts</td>
               </tr>
               <tr>
                 <td class="td-strong">Média</td>
                 <td>5</td>
                 <td>10</td>
                 <td>10</td>
-                <td>~250k pts</td>
+                <td>5.000</td>
+                <td>~250 k pts</td>
               </tr>
               <tr>
                 <td class="td-strong">Grande</td>
                 <td>10</td>
                 <td>50</td>
                 <td>20</td>
-                <td>~5M pts</td>
+                <td>5.000</td>
+                <td>~5 M pts</td>
               </tr>
             </tbody>
           </table>
-          <div style="background: var(--canvas); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 20px; margin-top: 8px;">
-            <div style="font-size: 14px; color: var(--ink); line-height: 1.5;"><strong>27 combinações</strong> no total (9 testes × 3 escalas), cada uma executada de forma isolada</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 9 — Metodologia: Infraestrutura Reprodutivel (DARK)
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="8">
-    <div class="slide-body">
-      <div class="section-label">Metodologia</div>
-      <h2 class="display-lg slide-title">Infraestrutura <span class="accent">Reprodutível</span></h2>
-      <div class="divider"></div>
-      <div class="infra-grid">
-        <div class="infra-item">
-          <div class="infra-item-title">Docker Compose</div>
-          <div class="infra-item-body">Versões de imagem fixadas. Cada banco sobe e desce isoladamente — apenas um ativo por vez</div>
-        </div>
-        <div class="infra-item">
-          <div class="infra-item-title">Python CLI</div>
-          <div class="infra-item-body"><code style="color: var(--primary); font-family: ui-monospace, Menlo, monospace;">benchmark.py</code> — orquestra todos os 27 testes com um único comando</div>
-        </div>
-        <div class="infra-item">
-          <div class="infra-item-title">Nix Flake</div>
-          <div class="infra-item-body">Ambiente declarativo e reprodutível: Java 17, Maven, Python 3, Docker. Zero configuração manual</div>
-        </div>
-        <div class="infra-item" style="display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <div class="infra-item-title">Repositorio publico</div>
-            <div class="infra-item-body" style="margin-bottom: 12px;">Tudo disponível para replicação independente</div>
-          </div>
-          <div style="font-family: ui-monospace, Menlo, Monaco, monospace; font-size: 13px; color: var(--primary); word-break: break-all;">github.com/LuizFerK/iot-benchrunner</div>
-        </div>
-      </div>
-      <div class="code-block mt-16">python3 benchmark.py --scale large</div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 10 — Resultados: Vazao de Escrita
-  ============================================================ -->
-  <div class="slide slide-light" data-index="9">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Vazao de Escrita</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col col-40" style="display: flex; flex-direction: column; justify-content: flex-start; gap: 12px;">
-          <div style="font-size: 14px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Escala pequena (ajustada)</div>
-          <div class="stat-block">
-            <div class="stat-db">IoTDB</div>
-            <div class="stat-value" style="color: var(--primary);">2,2 M pts/s</div>
-          </div>
-          <div class="stat-block">
-            <div class="stat-db">InfluxDB</div>
-            <div class="stat-value">397 K pts/s</div>
-          </div>
-          <div class="stat-block">
-            <div class="stat-db">TimescaleDB</div>
-            <div class="stat-value">174 K pts/s</div>
-          </div>
-        </div>
-        <div class="col" style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
-          <div style="font-size: 13px; font-weight: 500; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em;">Escalonamento de escrita</div>
-          <div class="img-card" style="flex: 1; width: 100%; max-height: 380px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_write_scaling.png" alt="Escalonamento de escrita" style="max-height: 360px;">
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 11 — Resultados: Escrita Fora de Ordem
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="10">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Escrita Fora de Ordem</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card-featured" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
-            <div style="font-size: 22px; font-weight: 500; color: var(--primary);">-13%</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Melhor tolerância absoluta e relativa</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">InfluxDB</div>
-            <div style="font-size: 22px; font-weight: 500; color: var(--ink);">-36%</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">TSM sofre com reescrita de segmentos</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
-            <div style="font-size: 22px; font-weight: 500; color: var(--ink);">-8%</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">WAL absorve bem a reordenação</div>
-          </div>
-        </div>
-        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
-          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_ooo_degradation.png" alt="Degradacao fora de ordem" style="max-height: 100%; max-width: 100%;">
-          </div>
-          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Configuração</span>&ensp;20% dos dados chegam com atraso (distribuição de Poisson)
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 12 — Resultados: Leitura — Ultimo Valor
-  ============================================================ -->
-  <div class="slide slide-light" data-index="11">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Leitura — Último Valor</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card-featured" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
-            <div style="font-size: 26px; font-weight: 500; color: var(--primary);">0,38 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Indice reverso do PostgreSQL</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
-            <div style="font-size: 26px; font-weight: 500; color: var(--ink);">1,24 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce moderadamente</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">InfluxDB</div>
-            <div style="font-size: 26px; font-weight: 500; color: var(--ink);">9,24 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce linearmente com arquivos TSM (sem atalho de último valor)</div>
-          </div>
-        </div>
-        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
-          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_latest_point_scaling.png" alt="Escalonamento de ultimo valor" style="max-height: 100%; max-width: 100%;">
-          </div>
-          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrão</span>&ensp;Monitoramento IoT crítico: "qual é a leitura atual do sensor X?"
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 13 — Resultados: Filtro de Valor
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="12">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Filtro de Valor</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col col-45" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="card-featured" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">IoTDB</div>
-            <div style="font-size: 20px; font-weight: 500; color: var(--primary);">3,72 ms → 19,4 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Crescimento <strong>sublinear</strong> — poda de blocos por estatisticas de min/max</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">InfluxDB</div>
-            <div style="font-size: 20px; font-weight: 500; color: var(--ink);">71 ms → 497 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Crescimento acentuado</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 4px;">TimescaleDB</div>
-            <div style="font-size: 20px; font-weight: 500; color: var(--ink);">24 ms → 510 ms</div>
-            <div style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Cresce quase linearmente</div>
-          </div>
-        </div>
-        <div class="col" style="display: flex; flex-direction: column; gap: 10px; min-height: 0;">
-          <div class="img-card" style="flex: 1; width: 100%; min-height: 0;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_value_filter_scaling.png" alt="Escalonamento de filtro de valor" style="max-height: 100%; max-width: 100%;">
-          </div>
-          <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.4; padding: 0 2px;">
-            <span style="font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-mute-2);">Padrão</span>&ensp;Alerta por limiar: "leituras acima de X nos últimos N dias"
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 14 — Resultados: Footprint de Memoria
-  ============================================================ -->
-  <div class="slide slide-light" data-index="13">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Footprint de Memoria</h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 40px; align-items: flex-start;">
-        <div class="col col-45" style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 6px;">IoTDB</div>
-            <div style="display: flex; gap: 16px; margin-bottom: 6px;">
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Inicial</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--ink);">~1,7 GB</div>
+          <div class="stat-row" style="gap: 20px">
+            <div class="stat-block">
+              <div class="stat-db">Primária: Escrita</div>
+              <div class="stat-value" style="font-size: 22px; margin-top: 6px">
+                Vazão (pts/s)
               </div>
-              <div style="display: flex; align-items: center; color: var(--ink-mute);">→</div>
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Estavel</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--ink);">~10–15 GB</div>
+              <div class="stat-label">Operações totais / Tempo decorrido</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-db">Primária: Leitura</div>
+              <div class="stat-value" style="font-size: 22px; margin-top: 6px">
+                Latência P99 (ms)
+              </div>
+              <div class="stat-label">Captura comportamento de cauda</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-db">Recursos</div>
+              <div class="stat-value" style="font-size: 22px; margin-top: 6px">
+                CPU &middot; Memória
+              </div>
+              <div class="stat-label">Média e pico via docker stats</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 18: Ajustes e Isolamento -->
+      <div class="slide slide-soft" data-index="18">
+        <div class="slide-body">
+          <div class="section-label">Metodologia</div>
+          <div class="slide-title display-lg">
+            Ajustes de Configuração e Isolamento
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-24">
+            <div class="card flex-1" style="height: 240px">
+              <div class="stat-db mb-12">
+                1: Isolamento sequencial de contêineres
+              </div>
+              <div class="body-md mb-12">
+                Original: todos os 3 contêineres ativos simultaneamente.
+                Contêineres ociosos competiam por cache de páginas do SO e CPU.
+              </div>
+              <div class="caption">
+                Corrigido: cada banco sobe imediatamente antes dos seus testes e
+                para logo após.
               </div>
             </div>
-            <div style="font-size: 13px; color: var(--ink-mute);">Heap da JVM + buffers em memória</div>
-          </div>
-          <div class="card-featured" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 6px;">InfluxDB</div>
-            <div style="display: flex; gap: 16px; margin-bottom: 6px;">
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Inicial</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--primary);">~190 MB</div>
+            <div class="card flex-1" style="height: 240px">
+              <div class="stat-db mb-12">2: Ajuste no nível do banco</div>
+              <div class="body-md mb-8">
+                <strong style="color: var(--primary)">TimescaleDB:</strong>
+                pgtune para PostgreSQL 15: shared_buffers=8GB, work_mem=27413kB,
+                checkpoint_completion_target=0.9
               </div>
-              <div style="display: flex; align-items: center; color: var(--ink-mute);">→</div>
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Estavel</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--primary);">~900 MB</div>
+              <div class="body-md mb-12">
+                <strong style="color: var(--primary)">InfluxDB:</strong> cache
+                TSM elevado de 1 GB para 8 GB
               </div>
-            </div>
-            <div style="font-size: 13px; color: var(--ink-mute);">Mais eficiente em memória</div>
-          </div>
-          <div class="card" style="padding: 16px 20px;">
-            <div class="stat-db" style="margin-bottom: 6px;">TimescaleDB</div>
-            <div style="display: flex; gap: 16px; margin-bottom: 6px;">
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Inicial</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--ink);">~239 MB</div>
-              </div>
-              <div style="display: flex; align-items: center; color: var(--ink-mute);">→</div>
-              <div>
-                <div style="font-size: 11px; color: var(--ink-mute); margin-bottom: 2px;">Estavel</div>
-                <div style="font-size: 20px; font-weight: 500; color: var(--ink);">~1,8 GB</div>
+              <div class="caption">
+                Configurações padrão do PostgreSQL são intencionalmente
+                conservadoras. Reportar sem ajuste seria reportar desempenho
+                abaixo do esperado para produção.
               </div>
             </div>
-            <div style="font-size: 13px; color: var(--ink-mute);">shared_buffers do PostgreSQL</div>
-          </div>
-        </div>
-        <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 400px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_memory_scaling.png" alt="Escalonamento de memoria" style="max-height: 380px;">
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ============================================================
-       SLIDE 15 — Descoberta Metodologica: Artefatos de Benchmark (DARK)
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="14">
-    <div class="slide-body">
-      <div class="section-label">Descoberta metodológica</div>
-      <h2 class="display-lg slide-title">Artefatos de <span class="accent">Benchmark</span></h2>
-      <div class="divider"></div>
-      <div class="row" style="gap: 32px; align-items: flex-start;">
-        <div class="col col-55" style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="font-size: 14px; color: var(--ink-mute); margin-bottom: 4px; line-height: 1.5;">Dois resultados das execucoes iniciais foram revertidos por reexecucoes isoladas:</div>
-          <table class="data-table" style="font-size: 13px;">
+      <!-- Slide 19: Ambiente de Teste -->
+      <div class="slide slide-soft" data-index="19">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">Ambiente de Teste</div>
+          <div class="divider"></div>
+          <div class="row gap-48" style="align-items: flex-start">
+            <div class="col col-55">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Componente</th>
+                    <th>Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">CPU</td>
+                    <td>Intel Core i5-11400F (6c/12t, 2,60&ndash;4,40 GHz)</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">RAM</td>
+                    <td>32 GB DDR4</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">Disco</td>
+                    <td>500 GB NVMe SSD</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">SO</td>
+                    <td>NixOS (Linux 6.12)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col flex-1" style="justify-content: center">
+              <div class="card-featured">
+                <div class="heading-md mb-8">Nota sobre CPU</div>
+                <div class="body-md" style="color: var(--ink-mute)">
+                  O
+                  <code
+                    style="
+                      font-family: ui-monospace, monospace;
+                      font-size: 14px;
+                    "
+                    >docker stats</code
+                  >
+                  reporta em porcentagem de 1 núcleo lógico. 600% = todos os 6
+                  núcleos saturados. Valores na faixa de 20&ndash;100% indicam
+                  carga dentro do orçamento computacional disponível.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 20: Escrita Linha de Base -->
+      <div class="slide slide-light" data-index="20">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">
+            Escrita de Linha de Base: Escala Pequena
+          </div>
+          <div class="divider"></div>
+          <table class="data-table mb-20">
             <thead>
               <tr>
-                <th>Resultado inicial</th>
-                <th>Reexecução isolada</th>
+                <th>Banco</th>
+                <th>pts/s</th>
+                <th>Lat. Média</th>
+                <th>Lat. P99</th>
+                <th>CPU Média</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Penalidade fora de ordem TimescaleDB (grande): <span class="artefact-value-bad">23%</span></td>
-                <td><span class="artefact-value-good">2,7%</span> — artefato de despejo de cache</td>
+                <td class="td-strong" style="color: var(--primary)">IoTDB</td>
+                <td class="td-strong" style="color: var(--primary)">
+                  2.163.809
+                </td>
+                <td>1,73 ms</td>
+                <td>1,18 ms</td>
+                <td>5,1%</td>
               </tr>
               <tr>
-                <td>Saturação de CPU TimescaleDB: <span class="artefact-value-bad">97,7%</span></td>
-                <td><span class="artefact-value-good">77,4%</span> — competição de CPU compartilhada</td>
+                <td class="td-strong">InfluxDB</td>
+                <td class="td-strong">397.894</td>
+                <td>12,00 ms</td>
+                <td>190,50 ms</td>
+                <td>8,5%</td>
+              </tr>
+              <tr>
+                <td class="td-strong">TimescaleDB</td>
+                <td class="td-strong">174.787</td>
+                <td>27,70 ms</td>
+                <td>223,00 ms</td>
+                <td>22,5%</td>
               </tr>
             </tbody>
           </table>
-          <div class="card" style="padding: 16px 20px; margin-top: 4px;">
-            <div style="font-size: 13px; color: var(--ink-mute); line-height: 1.5;">Medições de memória mudaram em <strong style="color: var(--primary);">uma ordem de magnitude</strong> ao corrigir o ciclo de vida compartilhado dos contêineres</div>
+          <div class="stat-row" style="gap: 20px; margin-top: 24px">
+            <div
+              class="stat-block"
+              style="
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+              "
+            >
+              <div class="stat-db">IoTDB vs InfluxDB</div>
+              <div
+                class="stat-value"
+                style="color: var(--primary); font-size: 40px"
+              >
+                ~5&times;
+              </div>
+              <div class="stat-label">Maior vazão sequencial</div>
+            </div>
+            <div
+              class="stat-block"
+              style="
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+              "
+            >
+              <div class="stat-db">IoTDB vs TimescaleDB</div>
+              <div
+                class="stat-value"
+                style="color: var(--primary); font-size: 40px"
+              >
+                ~12&times;
+              </div>
+              <div class="stat-label">Maior vazão sequencial</div>
+            </div>
+            <div class="card flex-1" style="padding: 16px 20px">
+              <div class="stat-db mb-8">Causas arquiteturais cumulativas</div>
+              <ul class="list" style="gap: 6px; font-size: 13px">
+                <li>
+                  Profundidade de protocolo (Thrift &lt; HTTP &lt; PostgreSQL)
+                </li>
+                <li>Buffering assíncrono vs. WAL síncrono</li>
+                <li>
+                  Sem manutenção de índice síncrona no caminho de escrita do
+                  IoTDB
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-        <div class="col" style="display: flex; align-items: center; justify-content: center; min-height: 0;">
-          <div class="img-card" style="width: 100%; max-height: 360px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_read_saturation_comparison.png" alt="Comparacao: recursos compartilhados vs. isolado" style="max-height: 340px;">
+      </div>
+
+      <!-- Slide 21: Sensibilidade ao Lote -->
+      <div class="slide slide-soft" data-index="21">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">Sensibilidade ao Lote</div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-50">
+              <div class="caption mb-8">
+                Razão de aceleração LOTE=1 &rarr; LOTE=1000 (escala pequena)
+              </div>
+              <table class="data-table mb-16">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>LOTE=1 (pts/s)</th>
+                    <th>LOTE=1000 (pts/s)</th>
+                    <th>Razão</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>28.593</td>
+                    <td>11.827.572</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      413&times;
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>5.024</td>
+                    <td>2.667.256</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      531&times;
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">TimescaleDB</td>
+                    <td>5.120</td>
+                    <td>214.927</td>
+                    <td class="td-strong">42&times;</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured">
+                <div class="caption mb-4">Implicação prática</div>
+                <div class="body-md">
+                  Para InfluxDB, bufferizar escritas localmente e enviar em lote
+                  é a otimização de maior impacto:
+                  <strong>531&times; de diferença</strong>.
+                </div>
+              </div>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: flex-start; justify-content: flex-start"
+            >
+              <div class="img-card" style="width: 100%; height: auto; margin-top: 30px">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_write_throughput_small.png"
+                  alt="Vazão de escrita"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 22: Escrita Fora de Ordem -->
+      <div class="slide slide-light" data-index="22">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">Escrita Fora de Ordem</div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-50">
+              <div class="caption mb-8">
+                20% dos pontos chegam com atraso distribuído por Poisson
+              </div>
+              <table class="data-table mb-16">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Escrita (pts/s)</th>
+                    <th>OOO (pts/s)</th>
+                    <th>Penalidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      TimescaleDB
+                    </td>
+                    <td>174.787</td>
+                    <td>160.121</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      -8,4%
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>2.163.809</td>
+                    <td>1.871.351</td>
+                    <td class="td-strong">-13,5%</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>397.894</td>
+                    <td>255.634</td>
+                    <td class="td-strong" style="color: #e05a5a">-35,7%</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured">
+                <div class="caption mb-8">Duas dimensões separadas</div>
+                <ul class="list" style="gap: 8px; font-size: 13px">
+                  <li>
+                    <strong>Tolerância relativa:</strong> TimescaleDB mais
+                    resiliente (B-tree independe de ordem)
+                  </li>
+                  <li>
+                    <strong>Vazão absoluta OOO:</strong> IoTDB ainda lidera
+                    (1,87 M vs. 255 K pts/s)
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: flex-start; justify-content: flex-start"
+            >
+              <div class="img-card" style="width: 100%; height: auto; margin-top: 30px">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_ooo_degradation.png"
+                  alt="Degradação OOO"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 23: Leitura Último Valor + Subamostragem -->
+      <div class="slide slide-soft" data-index="23">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">
+            Leitura: Último Valor e Subamostragem
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-32" style="align-items: flex-start">
+            <div class="col col-50">
+              <div class="caption mb-8">
+                Último valor: latência média (ms), menor é melhor
+              </div>
+              <table class="data-table mb-16" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Pequena</th>
+                    <th>Média</th>
+                    <th>Grande</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      TimescaleDB
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,38
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,41
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,62
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>1,24</td>
+                    <td>0,51</td>
+                    <td>0,68</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>9,24</td>
+                    <td>21,72</td>
+                    <td>23,24</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="caption mb-8">Subamostragem: latência média (ms)</div>
+              <table class="data-table" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Pequena</th>
+                    <th>Média</th>
+                    <th>Grande</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      TimescaleDB
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,61
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,52
+                    </td>
+                    <td style="color: var(--primary); font-weight: 500">
+                      0,73
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>1,81</td>
+                    <td>0,64</td>
+                    <td>0,95</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>5,71</td>
+                    <td>5,65</td>
+                    <td>9,22</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col flex-1 min-h-0" style="gap: 14px">
+              <div class="img-card flex-1 min-h-0" style="width: 100%">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_latest_point_scaling.png"
+                  alt="Escalonamento último valor"
+                />
+              </div>
+              <div class="card" style="padding: 14px 18px; flex: 0">
+                <ul class="list" style="gap: 6px; font-size: 12px">
+                  <li>
+                    <strong>TimescaleDB:</strong> B-tree reverso toca só o bloco
+                    mais recente
+                  </li>
+                  <li>
+                    <strong>IoTDB:</strong> cache de último valor em memória por
+                    série
+                  </li>
+                  <li>
+                    <strong>InfluxDB:</strong> busca em todos os arquivos TSM,
+                    cresce linearmente
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 24: Filtro de Valor + Intervalo -->
+      <div class="slide slide-light" data-index="24">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">
+            Leitura: Filtro de Valor e Intervalo
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-55">
+              <div class="caption mb-4">
+                Filtro de valor: o mais discriminatório arquiteturalmente (não
+                pode ser respondido por índice de tempo)
+              </div>
+              <div class="caption mb-8">Latência média (ms)</div>
+              <table class="data-table mb-16">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Pequena</th>
+                    <th>Grande</th>
+                    <th>Razão P&rarr;G</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      IoTDB
+                    </td>
+                    <td>3,72 ms</td>
+                    <td>19,42 ms</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      5,2&times;
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>71,09 ms</td>
+                    <td>496,81 ms</td>
+                    <td class="td-strong">7,0&times;</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">TimescaleDB</td>
+                    <td>23,98 ms</td>
+                    <td>510,05 ms</td>
+                    <td class="td-strong" style="color: #e05a5a">
+                      21,3&times;
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="row gap-12" style="flex-shrink: 0">
+                <div class="card-featured flex-1" style="padding: 14px 18px; height: 100px">
+                  <div class="caption mb-4">IoTDB: crescimento sublinear</div>
+                  <div style="font-size: 13px; color: var(--ink-mute)">
+                    Estatísticas min/max por bloco TsFile eliminam blocos
+                    inteiros. 5,2&times; para 100&times; mais dados.
+                  </div>
+                </div>
+                <div
+                  class="card flex-1"
+                  style="padding: 14px 18px; border-color: #ffcdd2; height: 100px"
+                >
+                  <div class="caption mb-4">
+                    TimescaleDB: degrada superlinear
+                  </div>
+                  <div style="font-size: 13px; color: var(--ink-mute)">
+                    BRIN com granularidade mais grossa. 21,3&times;. Na escala
+                    grande: 26&times; mais lento que IoTDB.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: flex-start; justify-content: flex-start"
+            >
+              <div class="img-card" style="width: 100%; height: auto; margin-top: 30px">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_value_filter_scaling.png"
+                  alt="Escalonamento filtro de valor"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 25: Footprint de Memória -->
+      <div class="slide slide-soft" data-index="25">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">Footprint de Memória</div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-50">
+              <table class="data-table mb-20">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Início</th>
+                    <th>Estável (média)</th>
+                    <th>Pico (grande)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td>~1,7 GB</td>
+                    <td>~10 GB</td>
+                    <td class="td-strong" style="color: #e05a5a">~15 GB</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>~190 MB</td>
+                    <td>~940 MB</td>
+                    <td>2,9 GB</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">TimescaleDB</td>
+                    <td>~239 MB</td>
+                    <td>~1,8 GB</td>
+                    <td>~1,8 GB</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured" style="margin-top: 24px">
+                <div class="caption mb-8">
+                  Implicação para gateways de borda IoT
+                </div>
+                <div class="body-md">
+                  Instâncias com RAM restrita favorecem
+                  <strong>InfluxDB</strong> mesmo quando a escrita é a
+                  prioridade. Sem pré-alocação JVM, cache TSM limitado.
+                </div>
+              </div>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: flex-start; justify-content: flex-start"
+            >
+              <div class="img-card" style="width: 100%; height: auto; margin-top: 30px">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_memory_scaling.png"
+                  alt="Footprint de memória"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 26: Efeitos de Escala -->
+      <div class="slide slide-light" data-index="26">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">Efeitos de Escala</div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-50">
+              <div class="caption mb-8">
+                Vazão de escrita por escala (pts/s)
+              </div>
+              <table class="data-table mb-16">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Pequena</th>
+                    <th>Média</th>
+                    <th>Grande</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      IoTDB
+                    </td>
+                    <td>2.163.809</td>
+                    <td>7.991.224</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      23.607.475
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td>397.894</td>
+                    <td>392.975</td>
+                    <td>1.256.602</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">TimescaleDB</td>
+                    <td>174.787</td>
+                    <td>175.685</td>
+                    <td>400.455</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured mb-12">
+                <div class="caption mb-4">IoTDB: escala superlinear</div>
+                <div style="font-size: 13px; color: var(--ink-mute)">
+                  Efeito de aquecimento JIT da JVM: execuções mais longas
+                  otimizam o caminho quente Thrift. 2,1 M &rarr; 7,9 M &rarr;
+                  23,6 M pts/s.
+                </div>
+              </div>
+              <div class="card" style="border-color: #ffcdd2">
+                <div class="caption mb-4">
+                  TimescaleDB timeout: batch-large, escala grande
+                </div>
+                <div style="font-size: 13px; color: var(--ink-mute)">
+                  Esgota 3.600 s. 50 dispositivos &times; LOTE=1000 disparam até
+                  50 flushes WAL simultâneos, gerando fan-out de partições de
+                  hipertabela.
+                </div>
+              </div>
+            </div>
+            <div
+              class="col flex-1 min-h-0"
+              style="align-items: flex-start; justify-content: flex-start"
+            >
+              <div class="img-card" style="width: 100%; height: auto; margin-top: 30px">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_heatmap_latency.png"
+                  alt="Heatmap de latência"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 27: Ajustes + Falsos Positivos -->
+      <div class="slide slide-soft" data-index="27">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">
+            Impacto dos Ajustes e Falsos Positivos
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-24">
+            <div class="col col-50">
+              <div class="card mb-16">
+                <div class="stat-db mb-8">Ganhos: TimescaleDB (pgtune)</div>
+                <ul class="list" style="gap: 8px; font-size: 13px">
+                  <li>
+                    Escrita: +30% vazão, -25% latência (shared_buffers=8GB)
+                  </li>
+                  <li>
+                    Filtro de valor: -40% latência (work_mem elimina sort em
+                    disco)
+                  </li>
+                  <li>P99 batch-large: 1.069 ms &rarr; 812 ms</li>
+                </ul>
+              </div>
+              <div class="card">
+                <div class="stat-db mb-8">Ganhos: InfluxDB (só isolamento)</div>
+                <ul class="list" style="gap: 8px; font-size: 13px">
+                  <li>Latências de leitura: -15-21%</li>
+                  <li>P99 batch-large: 205 ms &rarr; 60 ms (-71%)</li>
+                </ul>
+              </div>
+            </div>
+            <div class="col flex-1 min-h-0">
+              <div class="heading-md mb-12">
+                Dois falsos positivos revertidos
+              </div>
+              <table class="data-table mb-16" style="font-size: 12px">
+                <thead>
+                  <tr>
+                    <th>Resultado original</th>
+                    <th>Reexecução isolada</th>
+                    <th>Causa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      Penalidade OOO TimescaleDB:
+                      <strong style="color: #e05a5a">23%</strong>
+                    </td>
+                    <td><strong style="color: var(--primary)">2,7%</strong></td>
+                    <td>Cache frio por expansão do heap JVM do IoTDB</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      CPU TimescaleDB:
+                      <strong style="color: #e05a5a">97,7%</strong> / P99 4.232
+                      ms
+                    </td>
+                    <td>
+                      <strong style="color: var(--primary)">77,4%</strong> /
+                      1.850 ms
+                    </td>
+                    <td>3 bancos + cliente disputando 6 núcleos</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="img-card flex-1 min-h-0" style="width: 100%">
+                <img
+                  src="../../tcc2-latex/figures/pt_br/chart_read_saturation_comparison.png"
+                  alt="Comparação leitura"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 28: Achados Principais -->
+      <div class="slide slide-light" data-index="28">
+        <div class="slide-body">
+          <div class="section-label">Conclusão</div>
+          <div class="slide-title display-lg">Achados Principais</div>
+          <div class="divider"></div>
+          <div class="row gap-32">
+            <div class="col col-50">
+              <div class="finding-block">
+                <div class="finding-num">Achado 1</div>
+                <div class="finding-title">
+                  Arquitetura determina o comportamento de escalonamento
+                </div>
+                <div class="finding-body">
+                  Vantagem do filtro IoTDB cresce estruturalmente; latência do
+                  InfluxDB cresce linearmente; subamostragem do TimescaleDB
+                  permanece constante
+                </div>
+              </div>
+              <div class="finding-block">
+                <div class="finding-num">Achado 2</div>
+                <div class="finding-title">
+                  Nenhum dos três bancos se destaca em todas as cargas
+                </div>
+                <div class="finding-body">
+                  Cada banco lidera em um subconjunto específico de operações. A
+                  escolha depende do perfil da aplicação.
+                </div>
+              </div>
+              <div class="finding-block">
+                <div class="finding-num">Achado 3</div>
+                <div class="finding-title">
+                  Isolamento de recursos é pré-requisito para benchmark válido
+                </div>
+                <div class="finding-body">
+                  Dois falsos positivos revertidos por reexecuções isoladas
+                  demonstram isso empiricamente.
+                </div>
+              </div>
+            </div>
+            <div class="col flex-1">
+              <div class="heading-md mb-12">Guia de seleção</div>
+              <table class="data-table selection-table" style="font-size: 13px">
+                <thead>
+                  <tr>
+                    <th>Cenário</th>
+                    <th>Banco</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Ingestão IoT com escrita dominante + RAM suficiente</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      IoTDB
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Alertas por limiar sobre histórico crescente</td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      IoTDB
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Painéis com janelas de tempo recentes</td>
+                    <td class="td-strong">TimescaleDB</td>
+                  </tr>
+                  <tr>
+                    <td>Exportação histórica, consultas de intervalo</td>
+                    <td class="td-strong">TimescaleDB</td>
+                  </tr>
+                  <tr>
+                    <td>SQL, joins relacionais, ecossistema PostgreSQL</td>
+                    <td class="td-strong">TimescaleDB</td>
+                  </tr>
+                  <tr>
+                    <td>RAM restrita, volume moderado, carga mista</td>
+                    <td class="td-strong">InfluxDB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 29: Limitações e Trabalhos Futuros -->
+      <div class="slide slide-soft" data-index="29">
+        <div class="slide-body">
+          <div class="section-label">Conclusão</div>
+          <div class="slide-title display-lg">
+            Limitações e Trabalhos Futuros
+          </div>
+          <div class="divider"></div>
+          <div class="two-col-cards" style="margin-top: 0">
+            <div class="limit-card">
+              <div class="limit-card-title">Limitações</div>
+              <ul class="list" style="gap: 12px">
+                <li>
+                  Implantação em nó único : sem sobrecarga real de rede
+                  distribuída
+                </li>
+                <li>
+                  Testes de leitura sequenciais , cache aquecido favorece testes
+                  posteriores
+                </li>
+                <li>
+                  IoTDB: reconhecimento em memória antes da persistência
+                  (durabilidade diferida)
+                </li>
+                <li>
+                  JVM warmup: benchmarks curtos subestimam a vazão em estado
+                  estacionário do IoTDB
+                </li>
+              </ul>
+            </div>
+            <div class="limit-card">
+              <div class="limit-card-title">Trabalhos Futuros</div>
+              <ul class="list" style="gap: 12px">
+                <li>
+                  Implantações distribuídas (IoTDB multi-nó, InfluxDB Clustered,
+                  TimescaleDB + Citus)
+                </li>
+                <li>
+                  Datasets industriais reais em escala de bilhões de pontos
+                  (telemetria veicular, redes elétricas)
+                </li>
+                <li>
+                  Custo de replicação e failover para decisões de produção
+                </li>
+                <li>InfluxDB 3.0 (novo motor colunar Arrow/DataFusion)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 30: Obrigado -->
+      <div class="slide slide-light" data-index="30">
+        <div class="slide-body-centered">
+          <span class="pill mb-16">TCC 2 &middot; 2026</span>
+          <div class="capa-title" style="max-width: 780px">
+            Uma Análise Comparativa Reprodutível de Apache IoTDB, InfluxDB e
+            TimescaleDB para Cargas de Trabalho IoT
+          </div>
+          <div class="capa-meta mt-12">
+            <span class="capa-meta-name">Luiz Fernando Klein</span>
+            <span class="capa-meta-item"
+              >Ciência da Computação &middot; UFFS &middot; 2026</span
+            >
+          </div>
+          <div class="thanks-repo">
+            <span class="repo-dot"></span>
+            github.com/LuizFerK/iot-benchrunner
+          </div>
+          <div
+            style="
+              max-width: 580px;
+              margin: 20px auto 0;
+              font-size: 14px;
+              color: var(--ink-mute);
+              line-height: 1.55;
+              text-align: center;
+            "
+          >
+            Scripts de orquestração, configurações Docker, ambiente Nix e dados
+            de resultados disponíveis para replicação
           </div>
         </div>
       </div>
     </div>
-  </div>
+    <!-- /slides-container -->
 
-  <!-- ============================================================
-       SLIDE 16 — Visao Geral: Heatmap de Latencia
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="15">
-    <div class="slide-body">
-      <div class="section-label">Resultados</div>
-      <h2 class="display-lg slide-title">Heatmap de Latência</h2>
-      <div class="divider"></div>
-      <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 16px;">
-        <div style="display: flex; gap: 24px; align-items: flex-start;">
-          <div class="card" style="flex: 1; padding: 14px 18px;">
-            <div style="font-size: 14px; color: var(--ink); line-height: 1.45;">Comparação multidimensional de todos os testes de leitura nos três bancos</div>
-          </div>
-          <div class="card" style="flex: 1; padding: 14px 18px;">
-            <div style="font-size: 14px; color: var(--ink); line-height: 1.45;"><strong>Nenhum banco</strong> domina todas as dimensoes — padroes de forca e fraqueza emergem claramente</div>
-          </div>
-        </div>
-        <div class="heatmap-wrap">
-          <div class="img-card" style="max-height: 100%; width: 100%; max-width: 900px; max-height: 420px;">
-            <img src="../../tcc2-latex/figures/pt_br/chart_heatmap_latency.png" alt="Heatmap de latencia" style="max-height: 400px; max-width: 100%;">
-          </div>
-        </div>
+    <footer id="footer">
+      <div style="flex: 1"></div>
+      <div style="display: flex; align-items: center; gap: 16px">
+        <button
+          class="nav-icon-btn"
+          id="btn-prev"
+          onclick="navigate(-1)"
+          disabled
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10 12L6 8L10 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        <span id="counter">1 / 31</span>
+        <button class="nav-icon-btn" id="btn-next" onclick="navigate(1)">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 4L10 8L6 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
       </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       SLIDE 17 — Os Tres Achados Principais
-  ============================================================ -->
-  <div class="slide slide-light" data-index="16">
-    <div class="slide-body">
-      <div class="section-label">Conclusão</div>
-      <h2 class="display-lg slide-title">Os Três Achados Principais</h2>
-      <div class="divider"></div>
-      <div style="display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0;">
-        <div class="finding-block">
-          <div class="finding-num">Achado 1</div>
-          <div class="finding-title">Nenhum banco domina em todas as cargas de trabalho</div>
-          <div class="finding-body">IoTDB lidera escrita; TimescaleDB lidera subamostragem e último valor; InfluxDB equilibra em cenários de carga mista</div>
-        </div>
-        <div class="finding-block">
-          <div class="finding-num">Achado 2</div>
-          <div class="finding-title">Escolhas arquiteturais determinam o comportamento de escalonamento, não o ajuste</div>
-          <div class="finding-body">Vantagem do filtro de valor do IoTDB cresce com o volume (poda de blocos). Latência de último valor do InfluxDB cresce linearmente (sem atalho TSM). Subamostragem do TimescaleDB é genuinamente de latência constante (janela fixa)</div>
-        </div>
-        <div class="finding-block">
-          <div class="finding-num">Achado 3</div>
-          <div class="finding-title">A metodologia afeta criticamente a validade do benchmark</div>
-          <div class="finding-body">Ambientes com recursos compartilhados produzem resultados enganosos. Reexecuções isoladas são obrigatórias antes de apresentar propriedades arquiteturais</div>
-        </div>
+      <div
+        style="
+          flex: 1;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+        "
+      >
+        <button
+          class="nav-icon-btn"
+          id="btn-theme"
+          onclick="toggleDarkMode()"
+          title="Alternar tema"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            />
+          </svg>
+        </button>
       </div>
-    </div>
-  </div>
+    </footer>
 
-  <!-- ============================================================
-       SLIDE 18 — Guia de Selecao por Carga de Trabalho
-  ============================================================ -->
-  <div class="slide slide-soft" data-index="17">
-    <div class="slide-body">
-      <div class="section-label">Conclusão</div>
-      <h2 class="display-lg slide-title">Guia de Seleção por Carga de Trabalho</h2>
-      <div class="divider"></div>
-      <table class="data-table selection-table" style="flex: 1;">
-        <thead>
-          <tr>
-            <th>Cenario</th>
-            <th>Banco recomendado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Pipeline IoT dominado por escrita com RAM suficiente</td>
-            <td class="td-strong" style="color: var(--primary);">IoTDB</td>
-          </tr>
-          <tr>
-            <td>Análise com consultas de painel em janelas de tempo recentes</td>
-            <td class="td-strong" style="color: var(--primary);">TimescaleDB</td>
-          </tr>
-          <tr>
-            <td>Alertas por limiar sobre historico crescente</td>
-            <td class="td-strong" style="color: var(--primary);">IoTDB <span style="font-weight: 400; color: var(--ink-mute); font-size: 13px;">(filtro sublinear)</span></td>
-          </tr>
-          <tr>
-            <td>Carga mista, memória restrita, volume moderado</td>
-            <td class="td-strong" style="color: var(--primary);">InfluxDB</td>
-          </tr>
-          <tr>
-            <td>Necessidade de SQL, joins relacionais, ecossistema PostgreSQL</td>
-            <td class="td-strong" style="color: var(--primary);">TimescaleDB</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <script>
+      const slides = document.querySelectorAll(".slide");
+      const total = slides.length;
+      const _saved = parseInt(localStorage.getItem("slide") || "0", 10);
+      let current = Math.max(0, Math.min(_saved, total - 1));
 
-  <!-- ============================================================
-       SLIDE 19 — Limitacoes e Trabalhos Futuros
-  ============================================================ -->
-  <div class="slide slide-light" data-index="18">
-    <div class="slide-body">
-      <div class="section-label">Limitações e trabalhos futuros</div>
-      <h2 class="display-lg slide-title">Limitações e Trabalhos Futuros</h2>
-      <div class="divider"></div>
-      <div class="two-col-cards">
-        <div class="limit-card">
-          <div class="limit-card-title">Limitações</div>
-          <ul class="list" style="gap: 10px;">
-            <li style="font-size: 14px;">Implantação em nó único (sem latência real de rede)</li>
-            <li style="font-size: 14px;">Testes de leitura sequenciais (cache de páginas aquecido)</li>
-            <li style="font-size: 14px;">Durabilidade diferida do IoTDB (reconhecimento em memória antes do disco)</li>
-            <li style="font-size: 14px;">Aquecimento da JVM (benchmarks curtos subestimam o IoTDB)</li>
-          </ul>
-        </div>
-        <div class="limit-card" style="background: var(--canvas); border-color: var(--primary); border-width: 1px;">
-          <div class="limit-card-title" style="color: var(--primary);">Trabalhos futuros</div>
-          <ul class="list" style="gap: 10px;">
-            <li style="font-size: 14px;">Implantações distribuídas (IoTDB cluster, InfluxDB Clustered, TimescaleDB + Citus)</li>
-            <li style="font-size: 14px;">Datasets do mundo real (telemetria veicular, redes elétricas, escala de bilhões de pontos)</li>
-            <li style="font-size: 14px;">Overhead de durabilidade e alta disponibilidade (replicação, failover)</li>
-            <li style="font-size: 14px;">Evolução de versões (IoTDB 2.x, InfluxDB 3.0 com motor colunar Arrow/DataFusion)</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+      function showSlide(index) {
+        const next = Math.max(0, Math.min(index, total - 1));
+        if (next === current) return;
+        const outgoing = slides[current];
+        current = next;
+        const incoming = slides[current];
 
-  <!-- ============================================================
-       SLIDE 20 — Obrigado
-  ============================================================ -->
-  <div class="slide slide-light" data-index="19">
-    <div class="slide-body-centered">
-      <div style="margin-bottom: 16px;">
-        <span class="pill">Perguntas?</span>
-      </div>
-      <h1 style="font-size: 38px; font-weight: 500; line-height: 1.15; letter-spacing: -0.72px; color: var(--ink); max-width: 820px; margin-bottom: 32px; text-align: center;">
-        Uma Análise <span class="accent">Reprodutível</span> de Apache IoTDB, InfluxDB e TimescaleDB para Cargas de Trabalho IoT
-      </h1>
-      <div style="width: 40px; height: 2px; background: var(--hairline); margin: 0 auto 28px; border-radius: 1px;"></div>
-      <div style="font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 6px;">Luiz Fernando Klein</div>
-      <div style="font-size: 16px; color: var(--ink-mute); margin-bottom: 28px;">UFFS, 2026</div>
-      <div class="thanks-repo">
-        <span class="repo-dot"></span>
-        github.com/LuizFerK/iot-benchrunner
-      </div>
-      <div style="max-width: 580px; margin: 20px auto 0; font-size: 14px; color: var(--ink-mute); line-height: 1.55; text-align: center;">
-        Scripts de orquestração, configurações Docker, ambiente Nix e dados de resultados disponíveis para replicação
-      </div>
-    </div>
-  </div>
+        outgoing.style.transform = "translateY(-8px)";
+        outgoing.classList.remove("active");
+        outgoing.addEventListener(
+          "transitionend",
+          () => {
+            outgoing.style.transform = "";
+          },
+          { once: true },
+        );
 
-</div><!-- /slides-container -->
+        incoming.classList.add("active");
+        localStorage.setItem("slide", current);
+        updateUI();
+      }
 
-<footer id="footer">
-  <div style="flex: 1;"></div>
-  <div style="display: flex; align-items: center; gap: 16px;">
-    <button class="nav-icon-btn" id="btn-prev" onclick="navigate(-1)" disabled>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <span id="counter">1 / 20</span>
-    <button class="nav-icon-btn" id="btn-next" onclick="navigate(1)">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-  </div>
-  <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
-    <button class="nav-icon-btn" id="btn-theme" onclick="toggleDarkMode()" title="Alternar tema">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
-  </div>
-</footer>
+      function navigate(delta) {
+        showSlide(current + delta);
+      }
 
-<script>
-  const slides = document.querySelectorAll('.slide');
-  const total = slides.length;
-  let current = 0;
+      function updateUI() {
+        document.getElementById("btn-prev").disabled = current === 0;
+        document.getElementById("btn-next").disabled = current === total - 1;
+        document.getElementById("counter").textContent =
+          current + 1 + " / " + total;
+        const pct = ((current + 1) / total) * 100;
+        document.getElementById("progress-bar").style.transform =
+          "scaleX(" + pct / 100 + ")";
+      }
 
-  function showSlide(index) {
-    const next = Math.max(0, Math.min(index, total - 1));
-    if (next === current) return;
-    const outgoing = slides[current];
-    current = next;
-    const incoming = slides[current];
+      function toggleDarkMode() {
+        const isDark = document.body.classList.toggle("dark-mode");
+        document.getElementById("btn-theme").innerHTML = isDark
+          ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`
+          : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      }
 
-    outgoing.style.transform = 'translateY(-8px)';
-    outgoing.classList.remove('active');
-    outgoing.addEventListener('transitionend', () => {
-      outgoing.style.transform = '';
-    }, { once: true });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+          e.preventDefault();
+          navigate(1);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          e.preventDefault();
+          navigate(-1);
+        }
+      });
 
-    incoming.classList.add('active');
-    updateUI();
-  }
-
-  function navigate(delta) {
-    showSlide(current + delta);
-  }
-
-  function updateUI() {
-    document.getElementById('btn-prev').disabled = current === 0;
-    document.getElementById('btn-next').disabled = current === total - 1;
-    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
-    const pct = ((current + 1) / total) * 100;
-    document.getElementById('progress-bar').style.width = pct + '%';
-  }
-
-  function toggleDarkMode() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    document.getElementById('btn-theme').innerHTML = isDark
-      ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`
-      : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
-      e.preventDefault();
-      navigate(1);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      navigate(-1);
-    }
-  });
-
-  // Initialize
-  updateUI();
-</script>
-</body>
+      // Initialize — restore saved slide without animation
+      slides[0].classList.remove("active");
+      slides[current].classList.add("active");
+      updateUI();
+    </script>
+  </body>
 </html>
