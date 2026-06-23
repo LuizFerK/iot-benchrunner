@@ -970,6 +970,9 @@
       .mb-16 {
         margin-bottom: 16px;
       }
+      .mb-20 {
+        margin-bottom: 20px;
+      }
       .mb-24 {
         margin-bottom: 24px;
       }
@@ -1150,7 +1153,7 @@
                 precisão de milissegundos.
               </div>
               <div class="heading-md mb-12">
-                Limitações dos SGBDs relacionais
+                Limitações dos SGBDs tradicionais
               </div>
               <ul class="list mb-20" style="gap: 10px">
                 <li>Indexação ineficiente para padrões de acesso temporal</li>
@@ -1302,7 +1305,7 @@
                   <li>
                     Resultados não podem ser validados de forma independente
                   </li>
-                  <li>Impossível comparar descobertas entre estudos</li>
+                  <li>Dificuldade em comparar descobertas entre estudos</li>
                   <li>
                     Experimentos não se adaptam a novo hardware ou versões
                   </li>
@@ -1374,20 +1377,74 @@
             </div>
           </div>
           <div class="card-featured">
-            <div class="heading-md mb-8">
-              Isolamento: de conveniência a pré-requisito
-            </div>
+            <div class="heading-md mb-8">Isolamento</div>
             <div class="body-md" style="color: var(--ink-mute)">
-              Descoberto experimentalmente: contêineres concorrentes produziram
-              conclusões enganosas. O isolamento sequencial foi adotado como
-              pré-requisito para resultados válidos.
+              Contêineres concorrentes produziram conclusões enganosas. O
+              isolamento sequencial foi adotado como pré-requisito para
+              resultados válidos.
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 7: Bancos de Dados e Sistemas Distribuídos -->
-      <div class="slide slide-soft" data-index="7">
+      <!-- Slide 7: Fundamentação Teórica — Seções -->
+      <div class="slide slide-light" data-index="7">
+        <div class="slide-body-centered">
+          <div class="section-label">Fundamentação Teórica</div>
+          <div class="display-xl mb-16" style="text-align: center">
+            Fundamentação Teórica
+          </div>
+          <div class="divider" style="margin: 0 auto 24px"></div>
+          <div
+            class="body-lg mb-32"
+            style="color: var(--ink-mute); max-width: 620px; text-align: center"
+          >
+            Conceitos que sustentam as escolhas do trabalho e os critérios de
+            avaliação
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              max-width: 740px;
+              width: 100%;
+              flex-shrink: 0;
+              margin-top: 24px;
+            "
+          >
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 1</div>
+              <div class="heading-lg mb-8">Bancos de Dados</div>
+              <div class="caption">SGBDs, modelo relacional e SQL</div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 2</div>
+              <div class="heading-lg mb-8">Bancos de Dados Distribuídos</div>
+              <div class="caption">
+                Distribuição, localidade e consistência de réplicas
+              </div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 3</div>
+              <div class="heading-lg mb-8">
+                Bancos de Dados de Séries Temporais
+              </div>
+              <div class="caption">BDSTs, TsFile, TSM e hipertabelas</div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 4</div>
+              <div class="heading-lg mb-8">Benchmarks</div>
+              <div class="caption">
+                Portabilidade, clareza, escalabilidade e armadilhas recorrentes
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 8: Bancos de Dados e Sistemas Distribuídos -->
+      <div class="slide slide-soft" data-index="8">
         <div class="slide-body">
           <div class="section-label">Fundamentação Teórica</div>
           <div class="slide-title display-lg">
@@ -1878,9 +1935,7 @@
       <div class="slide slide-soft" data-index="16">
         <div class="slide-body">
           <div class="section-label">Metodologia</div>
-          <div class="slide-title display-lg">
-            9 Cargas de Trabalho e Rationale
-          </div>
+          <div class="slide-title display-lg">9 Cargas de Trabalho</div>
           <div class="divider"></div>
           <div class="row gap-24" style="align-items: flex-start">
             <div class="col col-50">
@@ -1895,7 +1950,7 @@
                 <tbody>
                   <tr>
                     <td class="td-strong">write</td>
-                    <td>Ingestão sequencial: linha de base de vazão bruta</td>
+                    <td>Ingestão sequencial: linha de base de vazão</td>
                   </tr>
                   <tr>
                     <td class="td-strong">out-of-order</td>
@@ -1929,6 +1984,10 @@
                 </thead>
                 <tbody>
                   <tr>
+                    <td class="td-strong">read</td>
+                    <td>10 tipos com peso igual: linha de base mista</td>
+                  </tr>
+                  <tr>
                     <td class="td-strong">latest-point</td>
                     <td>Estado atual do sensor: monitoramento fundamental</td>
                   </tr>
@@ -1945,10 +2004,6 @@
                     <td>
                       Predicado sobre valores (temp &gt; 85): alertas por limiar
                     </td>
-                  </tr>
-                  <tr>
-                    <td class="td-strong">read</td>
-                    <td>10 tipos com peso igual: linha de base mista</td>
                   </tr>
                 </tbody>
               </table>
@@ -2070,8 +2125,67 @@
         </div>
       </div>
 
-      <!-- Slide 19: Ambiente de Teste -->
-      <div class="slide slide-soft" data-index="19">
+      <!-- Slide 19: Experimentos — Visão Geral -->
+      <div class="slide slide-light" data-index="19">
+        <div class="slide-body-centered">
+          <div class="section-label">Experimentos</div>
+          <div class="display-xl mb-16" style="text-align: center">
+            Experimentos
+          </div>
+          <div class="divider" style="margin: 0 auto 24px"></div>
+          <div
+            class="body-lg mb-32"
+            style="color: var(--ink-mute); max-width: 620px; text-align: center"
+          >
+            Resultados de desempenho, uso de recursos e efeitos de escala nos
+            três bancos
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              max-width: 740px;
+              width: 100%;
+              flex-shrink: 0;
+              margin-top: 24px;
+            "
+          >
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 1</div>
+              <div class="heading-lg mb-8">Ambiente de Teste</div>
+              <div class="caption">
+                Hardware, SO e configurações de isolamento
+              </div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 2</div>
+              <div class="heading-lg mb-8">Desempenho de Escrita</div>
+              <div class="caption">
+                Linha de base &middot; Lote &middot; Fora de ordem
+              </div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 3</div>
+              <div class="heading-lg mb-8">Desempenho de Leitura</div>
+              <div class="caption">
+                Mista &middot; Último valor &middot; Subamostragem &middot;
+                Filtro &middot; Intervalo
+              </div>
+            </div>
+            <div class="card" style="text-align: center; padding: 28px 24px">
+              <div class="stat-db mb-12">Seção 4</div>
+              <div class="heading-lg mb-8">Escala, Memória e Ajustes</div>
+              <div class="caption">
+                Footprint &middot; Efeitos de escala &middot; Falsos positivos
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 20: Ambiente de Teste -->
+      <div class="slide slide-soft" data-index="20">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">Ambiente de Teste</div>
@@ -2127,8 +2241,8 @@
         </div>
       </div>
 
-      <!-- Slide 20: Escrita Linha de Base -->
-      <div class="slide slide-light" data-index="20">
+      <!-- Slide 21: Escrita Linha de Base -->
+      <div class="slide slide-light" data-index="21">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">
@@ -2217,18 +2331,14 @@
                   Profundidade de protocolo (Thrift &lt; HTTP &lt; PostgreSQL)
                 </li>
                 <li>Buffering assíncrono vs. WAL síncrono</li>
-                <li>
-                  Sem manutenção de índice síncrona no caminho de escrita do
-                  IoTDB
-                </li>
               </ul>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Slide 21: Sensibilidade ao Lote -->
-      <div class="slide slide-soft" data-index="21">
+      <!-- Slide 22: Sensibilidade ao Lote -->
+      <div class="slide slide-soft" data-index="22">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">Sensibilidade ao Lote</div>
@@ -2299,8 +2409,8 @@
         </div>
       </div>
 
-      <!-- Slide 22: Escrita Fora de Ordem -->
-      <div class="slide slide-light" data-index="22">
+      <!-- Slide 23: Escrita Fora de Ordem -->
+      <div class="slide slide-light" data-index="23">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">Escrita Fora de Ordem</div>
@@ -2376,8 +2486,403 @@
         </div>
       </div>
 
-      <!-- Slide 23: Leitura Último Valor + Subamostragem -->
-      <div class="slide slide-soft" data-index="23">
+      <!-- Slide 24: Leitura — Carga de Trabalho Mista (Linha de Base) -->
+      <div class="slide slide-light" data-index="24">
+        <div class="slide-body">
+          <div class="section-label">Experimentos</div>
+          <div class="slide-title display-lg">
+            Leitura: Carga de Trabalho Mista
+          </div>
+          <div class="divider"></div>
+          <div class="row gap-32" style="align-items: flex-start">
+            <div class="col col-50">
+              <div class="caption mb-8">
+                10 tipos de consulta com peso igual &middot; latência média (ms)
+                &middot; escala pequena
+              </div>
+              <table class="data-table mb-20">
+                <thead>
+                  <tr>
+                    <th>Banco</th>
+                    <th>Lat. Média (ms)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-strong" style="color: var(--primary)">
+                      TimescaleDB
+                    </td>
+                    <td class="td-strong" style="color: var(--primary)">
+                      0,67
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">IoTDB</td>
+                    <td class="td-strong">2,11</td>
+                  </tr>
+                  <tr>
+                    <td class="td-strong">InfluxDB</td>
+                    <td class="td-strong">14,28</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card-featured">
+                <div class="caption mb-4">Por que TimescaleDB lidera aqui</div>
+                <div class="body-md">
+                  A maioria dos 10 tipos são consultas de janela de tempo, onde
+                  o TimescaleDB é forte. A vantagem do IoTDB no filtro de valor
+                  é <strong>diluída pela ponderação igual</strong>.
+                </div>
+              </div>
+            </div>
+            <div
+              class="col flex-1"
+              style="justify-content: flex-start; padding-top: 28px"
+            >
+              <div
+                class="caption mb-8"
+                style="
+                  font-size: 11px;
+                  letter-spacing: 0.06em;
+                  text-transform: uppercase;
+                  font-weight: 500;
+                "
+              >
+                Tipos executados &nbsp;
+                <span
+                  style="
+                    background: var(--primary);
+                    color: var(--on-primary);
+                    border-radius: 9999px;
+                    padding: 1px 8px;
+                    font-size: 11px;
+                  "
+                  >7 janela de tempo</span
+                >
+                <span
+                  style="
+                    background: var(--canvas-soft);
+                    color: var(--ink-mute);
+                    border: 1px solid var(--hairline);
+                    border-radius: 9999px;
+                    padding: 1px 8px;
+                    font-size: 11px;
+                  "
+                  >3 outros</span
+                >
+              </div>
+              <ul
+                style="
+                  list-style: none;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 5px;
+                "
+              >
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >TIME_RANGE</code
+                  >
+                  <span style="color: var(--ink-mute)">intervalo de tempo</span>
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >VALUE_RANGE</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >intervalo + filtro de valor</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >AGG_RANGE</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >agregação em intervalo</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >AGG_RANGE_VALUE</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >agregação + intervalo + filtro</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >GROUP_BY</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >subamostragem (time_bucket)</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >RANGE_QUERY_DESC</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >intervalo de tempo (desc)</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--primary);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >VALUE_RANGE_QUERY_DESC</code
+                  >
+                  <span style="color: var(--ink-mute)"
+                    >intervalo + filtro (desc)</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--hairline-strong);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >PRECISE_POINT</code
+                  >
+                  <span style="color: var(--ink-faint)"
+                    >ponto exato por timestamp</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--hairline-strong);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >AGG_VALUE</code
+                  >
+                  <span style="color: var(--ink-faint)"
+                    >agregação com filtro de valor</span
+                  >
+                </li>
+                <li
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: var(--hairline-strong);
+                      flex-shrink: 0;
+                    "
+                  ></span>
+                  <code
+                    style="
+                      font-size: 11px;
+                      background: var(--hairline-cool);
+                      padding: 1px 5px;
+                      border-radius: 3px;
+                    "
+                    >LATEST_POINT</code
+                  >
+                  <span style="color: var(--ink-faint)">último valor</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 25: Leitura Último Valor + Subamostragem -->
+      <div class="slide slide-soft" data-index="25">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">
@@ -2430,7 +2935,9 @@
                   </tr>
                 </tbody>
               </table>
-              <div class="caption mb-8">Subamostragem: latência média (ms)</div>
+              <div class="caption mb-8 mt-16">
+                Subamostragem: latência média (ms)
+              </div>
               <table
                 class="data-table data-table-compact"
                 style="font-size: 13px"
@@ -2485,8 +2992,8 @@
         </div>
       </div>
 
-      <!-- Slide 24: Filtro de Valor + Intervalo -->
-      <div class="slide slide-light" data-index="24">
+      <!-- Slide 26: Filtro de Valor + Intervalo -->
+      <div class="slide slide-light" data-index="26">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">
@@ -2583,8 +3090,8 @@
         </div>
       </div>
 
-      <!-- Slide 25: Footprint de Memória -->
-      <div class="slide slide-soft" data-index="25">
+      <!-- Slide 27: Footprint de Memória -->
+      <div class="slide slide-soft" data-index="27">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">Footprint de Memória</div>
@@ -2650,8 +3157,8 @@
         </div>
       </div>
 
-      <!-- Slide 26: Efeitos de Escala -->
-      <div class="slide slide-light" data-index="26">
+      <!-- Slide 28: Efeitos de Escala -->
+      <div class="slide slide-light" data-index="28">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">Efeitos de Escala</div>
@@ -2732,8 +3239,8 @@
         </div>
       </div>
 
-      <!-- Slide 27: Ajustes + Falsos Positivos -->
-      <div class="slide slide-soft" data-index="27">
+      <!-- Slide 29: Ajustes + Falsos Positivos -->
+      <div class="slide slide-soft" data-index="29">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">
@@ -2753,6 +3260,10 @@
                     disco)
                   </li>
                   <li>P99 batch-large: 1.069 ms &rarr; 812 ms</li>
+                  <li>
+                    Carga mista (read): -38% latência &mdash; múltiplos tipos de
+                    consulta beneficiados
+                  </li>
                 </ul>
               </div>
               <div class="card">
@@ -2803,16 +3314,21 @@
         </div>
       </div>
 
-      <!-- Slide 28: Falsos Positivos - Gráfico -->
-      <div class="slide slide-soft" data-index="28">
+      <!-- Slide 30: Falsos Positivos - Gráfico -->
+      <div class="slide slide-soft" data-index="30">
         <div class="slide-body">
           <div class="section-label">Experimentos</div>
           <div class="slide-title display-lg">
             Impacto dos Ajustes e Falsos Positivos
           </div>
           <div class="divider"></div>
-          <div class="caption mb-12">Latência de leitura: execução compartilhada vs. isolada por banco</div>
-          <div class="img-card" style="width: 100%; height: auto; background: #fff">
+          <div class="caption mb-12">
+            Latência de leitura: execução compartilhada vs. isolada por banco
+          </div>
+          <div
+            class="img-card"
+            style="width: 100%; height: auto; background: #fff"
+          >
             <img
               src="../../tcc2-latex/figures/pt_br/chart_read_saturation_comparison.png"
               alt="Comparação leitura"
@@ -2821,8 +3337,8 @@
         </div>
       </div>
 
-      <!-- Slide 29: Achados Principais -->
-      <div class="slide slide-light" data-index="29">
+      <!-- Slide 31: Achados Principais -->
+      <div class="slide slide-light" data-index="31">
         <div class="slide-body">
           <div class="section-label">Conclusão</div>
           <div class="slide-title display-lg">Achados Principais</div>
@@ -2906,8 +3422,8 @@
         </div>
       </div>
 
-      <!-- Slide 30: Limitações e Trabalhos Futuros -->
-      <div class="slide slide-soft" data-index="30">
+      <!-- Slide 32: Limitações e Trabalhos Futuros -->
+      <div class="slide slide-soft" data-index="32">
         <div class="slide-body">
           <div class="section-label">Conclusão</div>
           <div class="slide-title display-lg">
@@ -2919,20 +3435,12 @@
               <div class="limit-card-title">Limitações</div>
               <ul class="list" style="gap: 12px">
                 <li>
-                  Implantação em nó único : sem sobrecarga real de rede
+                  Implantação em nó único: sem sobrecarga real de rede
                   distribuída
                 </li>
                 <li>
-                  Testes de leitura sequenciais , cache aquecido favorece testes
+                  Testes de leitura sequenciais, cache aquecido favorece testes
                   posteriores
-                </li>
-                <li>
-                  IoTDB: reconhecimento em memória antes da persistência
-                  (durabilidade diferida)
-                </li>
-                <li>
-                  JVM warmup: benchmarks curtos subestimam a vazão em estado
-                  estacionário do IoTDB
                 </li>
               </ul>
             </div>
@@ -2957,8 +3465,8 @@
         </div>
       </div>
 
-      <!-- Slide 31: Obrigado -->
-      <div class="slide slide-light" data-index="31">
+      <!-- Slide 33: Obrigado -->
+      <div class="slide slide-light" data-index="33">
         <div class="slide-body-centered">
           <span class="pill mb-16">TCC 2 &middot; 2026</span>
           <div class="capa-title" style="max-width: 780px">
