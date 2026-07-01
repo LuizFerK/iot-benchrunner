@@ -63,19 +63,7 @@ o InfluxDB e 12 vezes o TimescaleDB.
   \end{tabular}
 \end{table*}
 
-Os resultados são consistentes com três fatores arquiteturais cumulativos. Em termos de
-formato de armazenamento subjacente, o IoTDB utiliza o formato colunar TsFile em conjunto
-com um Write-Ahead Log (WAL) otimizado para escritas de alta frequência em séries temporais:
-os dados recebidos são acumulados em buffers em memória denominados MemTables e, quando esses
-buffers atingem o limite configurado, são descarregados assincronamente para arquivos TsFile
-em formato colunar ordenado por tempo, minimizando a entrada/saída aleatória em disco. O
-InfluxDB adota arquivos TSM com mecanismo de WAL semelhante, porém incorre em maior sobrecarga
-por escrita em razão do protocolo HTTP e da análise textual do protocolo de linha. O
-TimescaleDB herda o armazenamento orientado a linhas do PostgreSQL, modelo que impõe custo
-adicional para cargas de trabalho de séries temporais dominadas por inserções sequenciais, pois
-cada escrita percorre o pipeline completo de gerenciamento de transações do motor relacional.
-Esses três mecanismos de armazenamento fundamentalmente distintos explicam a diferença de
-magnitude observada na Tabela~\ref{tab:write-baseline}.
+Os resultados são consistentes com três fatores arquiteturais cumulativos.
 
 \textbf{Profundidade do protocolo.} O iot-benchmark se conecta ao IoTDB via Session API Thrift RPC no modo SESSION\_BY\_TABLET,
 submetendo tablets colunares tipados (i.e., agrupamentos de múltiplos pontos de séries temporais
@@ -362,7 +350,7 @@ filtragem de granularidade reduzida no nível de arquivo baseada em metadados de
 produzindo uma razão de escalonamento de 7 vezes, significativamente melhor do que a do
 TimescaleDB, mas ainda 10 vezes pior do que a do IoTDB em termos absolutos na escala grande.
 Conforme ilustrado na Figura~\ref{fig:value_filter_scaling}, a divergência entre os bancos de
-dados se acentua progressivamente com o crescimento da escala.
+dados se acentua com o crescimento da escala.
 
 \begin{figure}[ht]
   \centering
@@ -397,9 +385,8 @@ banco de dados e escala.
 
 O TimescaleDB é o mais rápido, com 0,54\,ms na escala pequena e 0,66\,ms na grande,
 beneficiando-se da eliminação de blocos de hipertabela (i.e., apenas blocos que sobrepõem a janela
-de consulta são abertos) e do cache de páginas do SO quente que evita entrada/saída em disco
-para janelas de tempo recentes frequentemente consultadas. O IoTDB atinge 1,19--1,21\,ms e
-é efetivamente insensível à escala dentro deste intervalo de dados. O InfluxDB atinge
+de consulta são abertos). O IoTDB atinge 1,19--1,21\,ms e permanece estável entre as escalas
+dentro deste intervalo de dados. O InfluxDB atinge
 5,41--8,68\,ms, onde o scanner de blocos TSM suporta maior sobrecarga por arquivo do que a
 varredura sequencial no nível de bloco do TimescaleDB.
 
@@ -467,7 +454,7 @@ volume sobre cada banco de dados e tipo de carga de trabalho.
   \label{fig:heatmap_latency}
 \end{figure*}
 
-A leitura do mapa de calor revela um padrão claro: o IoTDB mantém células predominantemente verdes em todas as transições de escala, exceto para o filtro de valor entre as escalas pequena e média, onde a pressão crescente sobre as estatísticas de mínimo/máximo dos blocos TsFile ainda não atingiu o regime de eliminação eficiente. O TimescaleDB apresenta as células mais vermelhas no filtro de valor em ambas as transições, confirmando que o índice BRIN não escala bem com o crescimento do volume de dados. O InfluxDB exibe degradação moderada e uniforme na maioria das cargas de trabalho, sem picos tão severos quanto os do TimescaleDB no filtro de valor, mas sem a estabilidade do IoTDB nas demais.
+O mapa de calor mostra que o IoTDB mantém células predominantemente verdes em quase todas as transições de escala. A exceção está no filtro de valor entre as escalas pequena e média, em que as estatísticas de mínimo/máximo dos blocos TsFile ainda não são suficientes para eliminar blocos com eficiência nesse volume. O TimescaleDB concentra as células mais vermelhas no filtro de valor em ambas as transições, confirmando que o índice BRIN não acompanha o crescimento do volume de dados. O InfluxDB apresenta degradação moderada e distribuída na maioria das cargas, sem picos tão severos quanto os do TimescaleDB no filtro de valor e sem a estabilidade do IoTDB nas demais.
 
 \subsubsection{Escalonamento da Vazão de Escrita}
 
