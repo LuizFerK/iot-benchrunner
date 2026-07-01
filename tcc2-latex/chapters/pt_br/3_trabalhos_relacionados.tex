@@ -144,6 +144,14 @@ de contêineres Docker ou configurações descritas, enquanto os dois restantes
 (\citep{shah2022performance} e \citep{naqvi2017influxdb}) não fornecem nenhum meio de replicação.
 Isso limita a validação independente dos resultados e dificulta atribuir diferenças de
 desempenho à arquitetura do banco de dados em vez de às condições experimentais.
+Este trabalho foi projetado com reprodutibilidade como requisito central. Enquanto a maioria
+dos estudos revisados se limita a descrever o ambiente de maneira superficial no artigo ou a publicar somente ferramentas
+auxiliares, como o gerador de dados de~\citep{shah2022performance}, todos os componentes
+necessários para replicação estão publicamente disponíveis, incluindo scripts de orquestração,
+imagens Docker com versões fixadas e clientes de benchmark parametrizados. Em relação
+a~\citep{pereira2023mulletbench}, único estudo totalmente reprodutível da literatura, este
+trabalho acrescenta um Nix flake com arquivo de lock que garante dependências determinísticas
+além do Docker.
 
 \subsubsection{Conjuntos de Dados}
 
