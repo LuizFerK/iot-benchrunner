@@ -28,7 +28,7 @@ expressão Flux. A presença frequente do InfluxDB em benchmarks anteriores o to
 
 \subsubsection{Apache IoTDB 1.3.0}
 
-O Apache IoTDB~\cite{wang2023iotdb} emergiu como líder de desempenho nos dois
+O Apache IoTDB~\citep{wang2023iotdb} emergiu como líder de desempenho nos dois
 estudos comparativos mais recentes~\citep{pereira2023mulletbench,wang2023iotdb}, representando
 uma mudança em relação à dominância do InfluxDB reportada em benchmarks mais antigos.
 Desenvolvido na Universidade Tsinghua especificamente para IoT industrial, usa um formato de
@@ -47,8 +47,8 @@ que exigem junções entre dados de séries temporais e relacionais, ele fornece
 a capacidade de séries temporais sem abandonar o ecossistema relacional. Aparece em quatro dos
 seis benchmarks revisados~\citep{shah2022performance,lima2024avaliando,wang2023iotdb,grzesik2020comparative}.
 
-O PostgreSQL simples, sem a extensão TimescaleDB, foi explicitamente excluído. O TimescaleDB
-tende a superar o PostgreSQL simples neste domínio; incluir ambos duplicaria os testes.
+O PostgreSQL, sem a extensão TimescaleDB, foi explicitamente excluído. O TimescaleDB
+tende a superar o PostgreSQL neste domínio; incluir ambos duplicaria os testes.
 Conclusões sobre configurações gerais do PostgreSQL, como dimensionamento de
 \texttt{shared\_buffers}, são transferíveis, mas resultados que dependem de otimizações
 específicas do TimescaleDB, como hipertabelas e eliminação de blocos por estatísticas de
@@ -68,8 +68,7 @@ parametrizadas ao contexto de séries temporais IoT~\citep{iotbenchmarkdoc}.
 
 Ferramentas alternativas foram avaliadas. O Time Series Benchmark Suite (TSBS) oferece um
 framework maduro para múltiplos bancos de dados, mas carece de suporte nativo ao IoTDB no
-momento desta escrita. O Apache JMeter, utilizado em Lima et al.~\cite{lima2024avaliando},
-lida bem com sistemas baseados em HTTP, mas requer scripts personalizados para interfaces
+momento desta escrita. O Apache JMeter lida bem com sistemas baseados em HTTP, mas requer scripts personalizados para interfaces
 Thrift e JDBC, introduzindo potencial sobrecarga específica da ferramenta. A interface uniforme
 do iot-benchmark e a semântica de carga de trabalho específica para IoT (clientes
   concorrentes organizados em hierarquias de dispositivos e sensores, tamanhos de lote
@@ -81,6 +80,19 @@ orquestração. A Matriz de Resultado reporta operações totais, tempo decorrid
 (pts/s). A Matriz de Latência reporta latências média, mínima, máxima e por percentil por tipo
 de operação, fornecendo os dados de comportamento de cauda por operação necessários para
 avaliar cargas de trabalho IoT em tempo real.
+
+Algumas limitações do iot-benchmark merecem registro. A ferramenta gera dados sintéticos com
+distribuição uniforme de valores de ponto flutuante, o que não reproduz fielmente padrões de
+dados reais, como sazonalidade, correlação entre sensores ou anomalias pontuais; os resultados
+refletem portanto padrões de carga controlados, não implantações de produção. Os parâmetros de
+configuração, especialmente o número de dispositivos, a contagem de sensores por dispositivo e a
+taxa de operações, influenciam diretamente os resultados: configurações que favorecem alta
+cardinalidade de séries beneficiam arquiteturas orientadas a colunas, enquanto configurações de
+baixa cardinalidade com lotes grandes podem favorecer bancos relacionais. Por fim, ainda que
+todos os bancos de dados sejam executados sequencialmente no mesmo hardware, eliminando
+viés de infraestrutura, execuções consecutivas de longa duração expõem o host ao risco de
+variação térmica entre escalas; este risco foi mitigado pela adoção de ciclo de vida sequencial
+de contêineres, detalhado na Seção~\ref{sec:infrastructure}.
 
 \subsection{Projeto das Cargas de Trabalho}
 \label{sec:workload}
@@ -109,7 +121,7 @@ Quatro testes de escrita exercitam padrões de ingestão distintos:
     transferência de dados.
 \end{description}
 
-Cada teste de escrita limpa e repovooa o banco de dados antes de ser executado, garantindo
+Cada teste de escrita limpa e repopula o banco de dados antes de ser executado, garantindo
 medições independentes e sem histórico.
 
 \subsubsection{Testes de Leitura}
@@ -176,6 +188,18 @@ de dados mais elevados, como mostrado nos resultados da Seção~\ref{sec:scale-e
 benchmark de escala única arrisca tirar conclusões que se aplicam apenas a um intervalo
 estreito de dados.
 
+A escolha de cada nível reflete cenários de implantação IoT reconhecíveis. A escala pequena
+(5 clientes, 10 dispositivos, 10 sensores, 1.000 laços) representa ambientes com poucos
+sensores e baixa frequência de amostragem, comuns em projetos piloto ou instalações
+residenciais, e serve principalmente para verificar a correção funcional e medir a sobrecarga
+base de cada banco de dados. A escala média (5 clientes, 10 dispositivos, 10 sensores,
+5.000 laços) corresponde a instalações industriais de porte moderado, onde o volume acumulado
+começa a pressionar os mecanismos de compressão e os tamanhos de buffer internos. A escala
+grande (10 clientes, 50 dispositivos, 20 sensores, 5.000 laços) simula ambientes de alta
+densidade, como cidades inteligentes ou plantas industriais de grande porte, onde o volume de
+dados é o principal gargalo e diferenças arquiteturais entre os bancos de dados se tornam
+mais pronunciadas.
+
 \subsection{Ambiente e Reprodutibilidade}
 \label{sec:infrastructure}
 
@@ -183,17 +207,19 @@ A reprodutibilidade neste projeto repousa em três componentes.
 
 \subsubsection{Docker Compose}
 
-O Docker Compose~\cite{docker} gerencia os contêineres de banco de dados com versões
-de imagem fixadas: \texttt{apache/iotdb:1.3.0-standalone}, \texttt{influxdb:2.7-alpine} e
-\texttt{timescale/timescaledb:latest-pg15}. Os contêineres são iniciados e parados
-sequencialmente: apenas um banco de dados está ativo a qualquer momento. Esse design,
-introduzido após as execuções iniciais revelarem artefatos de contenção de recursos entre bancos
-de dados, dá a cada banco de dados acesso exclusivo à CPU, largura de banda de memória e entrada/saída
-do host.
+Os experimentos foram conduzidos de forma sequencial, com apenas um banco de dados ativo
+por vez, garantindo isolamento completo entre as medições e eliminando interferência de
+cargas concorrentes. O Docker Compose~\citep{docker} gerencia os contêineres de banco de
+dados com versões de imagem fixadas: \texttt{apache/iotdb:1.3.0-standalone},
+\texttt{influxdb:2.7-alpine} e \texttt{timescale/timescaledb:latest-pg15}. Os contêineres
+são iniciados e parados sequencialmente: apenas um banco de dados está ativo a qualquer
+momento. Esse design, introduzido após as execuções iniciais revelarem artefatos de
+contenção de recursos entre bancos de dados, dá a cada banco de dados acesso exclusivo à
+CPU, largura de banda de memória e entrada/saída do host.
 
 \subsubsection{Nix Flake}
 
-O Nix flake~\cite{nixos} é uma ferramenta opcional que fornece um ambiente de
+O Nix flake~\citep{nixos} é uma ferramenta opcional que fornece um ambiente de
 desenvolvimento declarativo com arquivo de lock fixado. Executar \texttt{nix~develop} inicia
 um shell com versões exatamente especificadas de Java~17, Maven, Python~3 e ferramentas Docker.
 Executar \texttt{nix~run~.\#build} compila todos os três clientes de benchmark em uma única
@@ -248,19 +274,6 @@ A Tabela~\ref{tab:metrics} descreve as métricas de desempenho coletadas para ca
     \hline
   \end{tabular}
 \end{table*}
-
-Para os testes de escrita, a vazão mede pontos de dados ingeridos por segundo. Para os testes
-de leitura, a vazão soma as contagens de pontos retornados por todos os tipos de consulta ativos.
-Como diferentes tipos de consulta retornam quantidades fundamentalmente diferentes de dados por
-chamada: uma consulta de intervalo retorna centenas de pontos, uma consulta de último valor
-retorna exatamente um. A latência é portanto usada como a métrica primária de comparação de
-leitura em toda a Seção~\ref{sec:experiments}.
-
-A latência P99 captura o comportamento de cauda: 99\% das operações foram concluídas mais
-rápido que esse valor. A diferença entre a média e o P99 revela a consistência do tempo de
-resposta. Uma grande diferença sinaliza outliers severos ocasionais que produziriam jitter
-visível em aplicações IoT de monitoramento ao vivo, mesmo quando a latência média parece
-aceitável.
 
 \subsection{Ajuste de Configuração}
 \label{sec:tuning}

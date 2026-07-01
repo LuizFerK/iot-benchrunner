@@ -3,14 +3,14 @@
 
 A adoção generalizada das tecnologias de Internet das Coisas (IoT), sistemas de monitoramento industrial e aplicações financeiras em tempo real gerou um volume sem precedentes de dados
 temporais, criando desafios críticos para as infraestruturas de armazenamento e análise.
-Conforme projetado por~\cite{thierer2015iot}, o número de dispositivos IoT conectados vem
+Conforme projetado em 2015 por~\cite{thierer2015iot}, o número de dispositivos IoT conectados vem
 crescendo exponencialmente e deve continuar aumentando nos próximos anos, conforme ilustrado
 na Figura~\ref{fig:iot_projection}.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\columnwidth]{figures/pt_br/projecao-iot}
-  \caption{IoT: dispositivos em uso globalmente. Fonte:~\cite{thierer2015iot}.}
+  \caption{IoT: dispositivos em uso globalmente. Fonte:~\citep{thierer2015iot}.}
   \label{fig:iot_projection}
 \end{figure}
 
@@ -33,17 +33,17 @@ especializadas, arquitetadas desde a concepção para atender às demandas exclu
 temporais~\citep{InfluxDataTimeSeries}. Os
 bancos de dados relacionais tradicionais sofrem de ineficiências de indexação e limitações de
 memória ao lidar com grandes volumes de dados temporais, enquanto os BDSTs mantêm alto
-desempenho por terem sido construídos com o tempo como preocupação central ~~\cite{naqvi2017influxdb}. Além da vazão,
+desempenho por terem sido construídos com o tempo como preocupação central ~~\citep{naqvi2017influxdb}. Além da vazão,
 os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
-intervalos de tempo e políticas automáticas de retenção que reduzem os custos operacionais,
-recursos importantes para aplicações IoT onde medições contínuas de sensores demandam
-escalabilidade e uso econômico de recursos~\citep{Dunning2014}.
+intervalos de tempo e políticas automáticas de retenção, que reduzem os custos operacionais~\citep{Dunning2014}.
+Esses recursos são especialmente importantes para aplicações IoT, nas quais medições contínuas de sensores demandam
+escalabilidade e uso econômico de recursos.
 
 O cenário dos BDSTs ampliou-se nos últimos anos, com sistemas adotando abordagens
 arquiteturais distintas para o mesmo problema.
 O \textit{Apache IoTDB}~\citep{wang2023iotdb}, desenvolvido na Universidade Tsinghua, foi
 concebido especificamente para IoT industrial, utilizando um formato de arquivo colunar
-personalizado (TsFile) e um protocolo binário RPC que possibilita taxas de ingestão
+personalizado (TsFile) e um protocolo binário Remote Procedure Call (RPC) que possibilita taxas de ingestão
 extremamente elevadas. O \textit{InfluxDB}, avaliado em quatro dos cinco estudos de desempenho revisados neste
 trabalho~\citep{naqvi2017influxdb,shah2022performance,lima2024avaliando,wang2023iotdb}, usa
 um motor de armazenamento Time-Structured Merge Tree (TSM) exposto via API HTTP com
@@ -70,10 +70,7 @@ três escalas de volume de dados. Os bancos de dados foram selecionados com base
 proeminência na literatura: InfluxDB como o padrão de referência
 estabelecido, Apache IoTDB como o líder emergente nos dois estudos mais recentes~\citep{pereira2023mulletbench,wang2023iotdb},
 e TimescaleDB como a alternativa baseada em SQL que oferece ampla compatibilidade com
-ecossistemas. A metodologia de benchmark foi projetada para isolar propriedades arquiteturais
-de artefatos de medição, incluindo uma comparação explícita entre execuções originais com
-recursos compartilhados e reexecuções isoladas e devidamente ajustadas, para validar quais
-descobertas refletem o comportamento genuíno de cada banco de dados.
+ecossistemas.
 
 Os resultados mostram que nenhum banco de dados domina em todas as dimensões: o IoTDB lidera em
 vazão de escrita sequencial e filtragem de valor, o TimescaleDB oferece latência constante em
