@@ -73,26 +73,16 @@ Thrift e JDBC, introduzindo potencial sobrecarga específica da ferramenta. A in
 do iot-benchmark e a semântica de carga de trabalho específica para IoT (clientes
   concorrentes organizados em hierarquias de dispositivos e sensores, tamanhos de lote
 configuráveis e geração de dados fora de ordem distribuída por Poisson) tornaram-no a
-escolha mais adequada para este estudo.
+escolha mais adequada para este estudo. Cabe registrar, no entanto, que o iot-benchmark é
+desenvolvido pelo mesmo grupo de pesquisa responsável pelo Apache IoTDB~\citep{iotbenchmark},
+o que representa um potencial viés em favor desse banco de dados; os resultados relativos ao
+IoTDB devem ser interpretados com essa ressalva.
 
 A ferramenta produz duas matrizes de saída estruturadas que são analisadas pela camada de
 orquestração. A Matriz de Resultado reporta operações totais, tempo decorrido e vazão agregada
 (pts/s). A Matriz de Latência reporta latências média, mínima, máxima e por percentil por tipo
 de operação, fornecendo os dados de comportamento de cauda por operação necessários para
 avaliar cargas de trabalho IoT em tempo real.
-
-Algumas limitações do iot-benchmark merecem registro. A ferramenta gera dados sintéticos com
-distribuição uniforme de valores de ponto flutuante, o que não reproduz fielmente padrões de
-dados reais, como sazonalidade, correlação entre sensores ou anomalias pontuais; os resultados
-refletem portanto padrões de carga controlados, não implantações de produção. Os parâmetros de
-configuração, especialmente o número de dispositivos, a contagem de sensores por dispositivo e a
-taxa de operações, influenciam diretamente os resultados: configurações que favorecem alta
-cardinalidade de séries beneficiam arquiteturas orientadas a colunas, enquanto configurações de
-baixa cardinalidade com lotes grandes podem favorecer bancos relacionais. Por fim, ainda que
-todos os bancos de dados sejam executados sequencialmente no mesmo hardware, eliminando
-viés de infraestrutura, execuções consecutivas de longa duração expõem o host ao risco de
-variação térmica entre escalas; este risco foi mitigado pela adoção de ciclo de vida sequencial
-de contêineres, detalhado na Seção~\ref{sec:infrastructure}.
 
 \subsection{Projeto das Cargas de Trabalho}
 \label{sec:workload}
