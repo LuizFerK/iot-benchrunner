@@ -177,12 +177,15 @@ Os três bancos de dados comparados neste trabalho representam três arquitetura
 armazenamento para séries temporais, cada uma com diferentes compromissos entre vazão de escrita,
 latência de leitura e consumo de recursos.
 
-\textbf{Apache IoTDB}~\citep{wang2023iotdb} é um banco de dados de séries temporais de código
-aberto, desenvolvido pela Universidade Tsinghua e mantido pela Apache Software Foundation,
-concebido especificamente para cargas de trabalho IoT industriais. Ele adota um formato de
-armazenamento colunar proprietário (TsFile) e oferece alta vazão de ingestão por meio de uma
-interface Thrift RPC nativa. Os detalhes arquiteturais são apresentados na
-Seção~\ref{sec:methodology}.
+\textbf{Apache IoTDB}~\cite{wang2023iotdb} foi concebido especificamente para o domínio IoT.
+Ele usa o TsFile~\citep{zhao2024tsfile}, um formato de arquivo colunar personalizado que armazena dados em blocos
+ordenados com estatísticas de mínimo/máximo por bloco. As escritas são primeiro absorvidas em
+um buffer em memória (memtable) gerenciado pela JVM e descarregadas para segmentos TsFile
+de forma assíncrona. Essa estratégia de escrita diferida é similar a uma abordagem de
+Log-Structured Merge Tree (LSM)~\citep{oneil1996lsm}, trocando garantias estritas de durabilidade por alta vazão
+de escrita. A interface de ingestão nativa é um protocolo binário Thrift RPC (Session API), que submete
+tablets colunares tipados diretamente no buffer de escrita com sobrecarga mínima. As estatísticas de mínimo/máximo armazenadas por bloco permitem a eliminação antecipada de blocos incompatíveis durante consultas de filtro de valor, uma propriedade que se torna cada vez mais vantajosa à medida que o conjunto de
+dados cresce~\citep{wang2023iotdb}.
 
 \textbf{InfluxDB}~\citep{naqvi2017influxdb} usa um motor de armazenamento Time-Structured Merge
 Tree (TSM), que organiza dados em blocos comprimidos ordenados por tempo. Assim como a árvore

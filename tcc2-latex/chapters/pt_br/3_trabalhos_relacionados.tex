@@ -2,7 +2,7 @@
 \label{sec:related}
 
 Para a elaboração deste estudo, foram revisados trabalhos comparativos sobre bancos de dados de
-séries temporais, abrangendo tanto análises de funcionalidade quanto benchmarks de desempenho.
+séries temporais, com foco em benchmarks de desempenho.
 A busca foi conduzida utilizando palavras-chave como ``data streaming'', ``timeseries'' e
 ``timeseries databases'', com os resultados ordenados por contagem de citações para priorizar
 análises mais estabelecidas e desenvolvidas. A partir dessa busca, 23 resultados foram
@@ -15,7 +15,7 @@ temporais. \cite{Gaber2005Mining} contribuiu com informações relevantes sobre 
 subjacentes às implementações de BDSTs, apesar de não estar diretamente focado em avaliação
 comparativa.
 
-Da leitura inicial, sete trabalhos foram selecionados para estudo detalhado. Com base nestes trabalhos, foram identificadas duas linhas de análise: (i) Desempenho e (ii) Comparativa. Desta forma, este capítulo está organizado em duas seções. A seção de Análise de Desempenho cobre estudos comparativos de benchmark. A seção de Análise Comparativa sintetiza e critica todos os trabalhos selecionados por meio de uma tabela comparativa, destacando padrões, lacunas e tendências identificadas na literatura.
+Da leitura inicial, seis trabalhos foram selecionados para estudo detalhado. Com base nestes trabalhos, foram identificadas duas linhas de análise: (i) Desempenho e (ii) Comparativa. Desta forma, este capítulo está organizado em duas seções. A seção de Análise de Desempenho cobre estudos comparativos de benchmark. A seção de Análise Comparativa sintetiza e critica todos os trabalhos selecionados por meio de uma tabela comparativa, destacando padrões, lacunas e tendências identificadas na literatura.
 
 \subsection{Análise de Desempenho}
 
@@ -144,20 +144,6 @@ de contêineres Docker ou configurações descritas, enquanto os dois restantes
 (\citep{shah2022performance} e \citep{naqvi2017influxdb}) não fornecem nenhum meio de replicação.
 Isso limita a validação independente dos resultados e dificulta atribuir diferenças de
 desempenho à arquitetura do banco de dados em vez de às condições experimentais.
-
-Em contraste, o presente trabalho foi desenvolvido com reprodutibilidade como requisito central
-do projeto. O ambiente experimental completo é definido por meio de um Nix flake, que garante
-dependências determinísticas e elimina variações causadas por diferenças de sistema operacional
-ou versões de bibliotecas. Cada banco de dados executa em contêiner Docker isolado com imagem
-de versão fixada, impedindo atualizações silenciosas que alterem o comportamento observado. A
-ferramenta de automação dos testes, o iot-benchrunner, bem como todos os arquivos de
-configuração utilizados, estão publicamente disponíveis em
-\url{https://github.com/LuizFerK/iot-benchrunner}. Os testes são executados de forma
-sequencial, e não concorrente, eliminando interferência entre instâncias de banco de dados
-durante a coleta de métricas. Os trabalhos relacionados, por sua vez, descrevem o ambiente
-experimental apenas em prosa, sem fornecer a configuração efetiva utilizada, além de dependerem
-de hardware proprietário ou de versões de ferramentas que podem não estar mais disponíveis,
-o que inviabiliza a replicação independente dos experimentos.
 
 \subsubsection{Conjuntos de Dados}
 
