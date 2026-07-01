@@ -179,8 +179,8 @@ consistente com regravações de blocos TSM necessárias para acomodar pontos fo
 
 Em vazão absoluta, o IoTDB ainda lidera amplamente sob condições fora de ordem
 (1,87\,M vs.\ 255\,K pts/s para InfluxDB). Portanto, duas dimensões devem ser consideradas
-separadamente: vazão absoluta fora de ordem (i.e., IoTDB lidera em cada escala) e degradação
-relativa por desordem de escrita (i.e., TimescaleDB é o mais resiliente com a menor penalidade
+separadamente: vazão absoluta fora de ordem (IoTDB lidera em cada escala) e degradação
+relativa por desordem de escrita (TimescaleDB é o mais resiliente com a menor penalidade
 fracional). A Figura~\ref{fig:ooo_degradation} ilustra essas degradações relativas em todas
 as três escalas.
 
@@ -351,8 +351,7 @@ dados cem vezes maiores). Esse é o comportamento esperado de uma estrutura de s
 em estatísticas: a razão de eliminação melhora à medida que os blocos ficam mais densos.
 
 O TimescaleDB usa o BRIN (Block Range INdex) do PostgreSQL, que registra valores de
-mínimo/máximo por intervalo de bloco em disco. O BRIN fornece eliminação com granularidade
-de granularidade mais ampla do que as estatísticas por bloco do IoTDB e degrada em taxa superlinear
+mínimo/máximo por intervalo de bloco em disco. O BRIN fornece eliminação com granularidade mais ampla do que as estatísticas por bloco do IoTDB e degrada em taxa superlinear
 (21,3 vezes para dados cem vezes maiores). Na escala grande, o TimescaleDB fica em média 510\,ms
 por consulta de filtro de valor, uma desvantagem de 26 vezes relativa ao IoTDB. Essa
 carga de trabalho também leva o TimescaleDB à sua maior utilização de CPU (77\% médio,
