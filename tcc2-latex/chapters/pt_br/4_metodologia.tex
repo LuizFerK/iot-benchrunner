@@ -22,27 +22,38 @@ Os três bancos de dados foram selecionados para representar abordagens arquitet
 
 O InfluxDB serve como uma base comum na pesquisa comparativa de BDSTs, aparecendo em quatro dos cinco estudos de desempenho revisados~\citep{naqvi2017influxdb,
 shah2022performance,lima2024avaliando,wang2023iotdb}. Ele usa um motor de armazenamento TSM
-(Time-Structured Merge Tree) que organiza dados em blocos comprimidos ordenados por tempo. A
-ingestão ocorre via API HTTP com protocolo de linha; consultas analíticas usam a linguagem de
-expressão Flux. A presença frequente do InfluxDB em benchmarks anteriores o torna um ponto de referência útil: qualquer novo estudo que o omita perde comparabilidade com a literatura existente.
+(Time-Structured Merge Tree) que organiza dados em blocos comprimidos ordenados por tempo,
+com escritas absorvidas em cache em memória e compactadas periodicamente em arquivos imutáveis
+em disco. A ingestão ocorre via API HTTP com protocolo de linha; consultas analíticas usam a
+linguagem de expressão Flux. O InfluxDB mantém um Índice de Séries Temporais (TSI) para
+localização de séries; a memória em processo é dominada pelo cache TSM, pelo TSI e pela
+sobrecarga do runtime Go. A presença frequente do InfluxDB em benchmarks anteriores o torna um
+ponto de referência útil: qualquer novo estudo que o omita perde comparabilidade com a
+literatura existente.
 
 \subsubsection{Apache IoTDB 1.3.0}
 
 O Apache IoTDB~\citep{wang2023iotdb} emergiu como líder de desempenho nos dois
 estudos comparativos mais recentes~\citep{pereira2023mulletbench,wang2023iotdb}, representando
 uma mudança em relação à dominância do InfluxDB reportada em benchmarks mais antigos.
-Desenvolvido na Universidade Tsinghua especificamente para IoT industrial, usa um formato de
-arquivo colunar personalizado (TsFile) e um protocolo binário Thrift RPC (Session API). A ingestão de escritas é armazenada em buffer no heap gerenciado pela
-JVM antes de ser descarregada para o disco como segmentos colunares ordenados, possibilitando
-vazão excepcionalmente alta para fluxos de séries temporais ordenadas. Sua rápida ascensão em benchmarks recentes, combinada com sua abordagem arquitetural distinta, tornou-o adequado para este estudo.
+Desenvolvido na Universidade Tsinghua especificamente para IoT industrial, usa o TsFile, um
+formato de arquivo colunar personalizado que armazena dados em blocos ordenados com estatísticas
+de mínimo/máximo por bloco. As escritas são absorvidas em buffer no heap gerenciado pela JVM e
+descarregadas assincronamente para segmentos TsFile, em uma estratégia similar a uma
+Log-Structured Merge Tree (LSM)~\citep{oneil1996lsm}. A ingestão nativa usa um protocolo
+binário Thrift RPC (Session API), submetendo tablets colunares tipados diretamente no buffer
+de escrita. As estatísticas por bloco permitem a eliminação antecipada de blocos irrelevantes
+em consultas de filtro de valor, vantagem que cresce com o volume de dados. Sua rápida ascensão
+em benchmarks recentes, combinada com essa abordagem arquitetural distinta, tornou-o adequado
+para este estudo.
 
 \subsubsection{TimescaleDB}
 
 O TimescaleDB estende o PostgreSQL~15 com capacidades de séries temporais: particionamento
 automático de hipertabela por intervalo de tempo, a função de agregação \texttt{time\_bucket()}
-para subamostragem e compressão opcional por bloco. Ele mantém o motor relacional completo com
-durabilidade baseada em WAL, controle de concorrência MVCC, índices B-tree e compatibilidade
-completa com SQL. Para organizações com infraestrutura PostgreSQL existente, ou para aplicações
+para subamostragem e compressão opcional por bloco. Ele mantém o motor relacional completo com durabilidade baseada em WAL, controle de
+concorrência MVCC, índices B-tree e compatibilidade completa com SQL. Os índices BRIN
+(Block Range INdex) fornecem eliminação baseada em intervalos para predicados de valor. Para organizações com infraestrutura PostgreSQL existente, ou para aplicações
 que exigem junções entre dados de séries temporais e relacionais, ele fornece um caminho para
 a capacidade de séries temporais sem abandonar o ecossistema relacional. Aparece em quatro dos
 seis benchmarks revisados~\citep{shah2022performance,lima2024avaliando,wang2023iotdb,grzesik2020comparative}.
@@ -53,6 +64,24 @@ Conclusões sobre configurações gerais do PostgreSQL, como dimensionamento de
 \texttt{shared\_buffers}, são transferíveis, mas resultados que dependem de otimizações
 específicas do TimescaleDB, como hipertabelas e eliminação de blocos por estatísticas de
 mínimo/máximo, não se aplicam diretamente ao PostgreSQL sem a extensão.
+
+A Tabela~\ref{tab:db_comparison} sumariza as principais características dos três bancos
+selecionados.
+
+\begin{table}[ht]
+  \centering
+  \caption{Comparação entre os bancos de dados de séries temporais avaliados.}
+  \label{tab:db_comparison}
+  \begin{tabular}{lllll}
+    \hline
+    \textbf{Banco de Dados} & \textbf{Arquitetura} & \textbf{Armazenamento} & \textbf{Protocolo} & \textbf{Consistência} \\
+    \hline
+    IoTDB      & TSDB nativa orientada a colunas                    & TsFile (formato proprietário)          & IoTDB-SQL, MQTT, REST         & Eventual      \\
+    InfluxDB   & TSDB nativa com mecanismo TSM                      & TSM (Time-Structured Merge Tree)       & Line Protocol, HTTP/Flux      & Eventual      \\
+    TimescaleDB & Extensão do PostgreSQL com hipertabelas            & Herda estruturas do PostgreSQL         & Protocolo PostgreSQL, HTTP    & ACID completa \\
+    \hline
+  \end{tabular}
+\end{table}
 
 \subsection{Ferramenta de Benchmark}
 \label{sec:benchmark-tool}
