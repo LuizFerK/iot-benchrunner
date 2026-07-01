@@ -59,78 +59,78 @@ STRINGS = {
             'VALUE-FILTER': 'VALUE-FILTER',
         },
         # chart 1 — per-scale
-        'c1_title':   'Chart 1 — Write Throughput by Database',
+        'c1_title':   'Write Throughput by Database',
         'c1_xlabel':  'Write Test Type',
         'c1_ylabel':  'Throughput (pts/s) — log scale',
         # chart 2 — per-scale
-        'c2_title':   'Chart 2 — Efficiency Profile (WRITE test, {scale} scale)\n1 = best performance',
+        'c2_title':   'Efficiency Profile (WRITE test, {scale} scale)\n1 = best performance',
         'c2_axes':    ['Throughput', 'Avg Latency\n(↑=better)', 'P99 Latency\n(↑=better)',
                        'Avg CPU\n(↑=better)', 'Peak Mem\n(↑=better)'],
         # chart 3 — per-scale
-        'c3_title':   'Chart 3 — Cost × Benefit: Memory vs Throughput ({scale} scale)',
+        'c3_title':   'Cost × Benefit: Memory vs Throughput ({scale} scale)',
         'c3_xlabel':  'Peak Memory (MB) — log scale',
         'c3_ylabel':  'Throughput (pts/s) — log scale',
         'c3_favorable':   '← Favorable\n(high perf., low resource)',
         'c3_unfavorable': 'Unfavorable →\n(low perf., high resource)',
         # chart 4 — per-scale
-        'c4_title':   'Chart 4 — P99 Consistency: Average + Gap to P99 ({scale} scale)',
+        'c4_title':   'P99 Consistency: Average + Gap to P99 ({scale} scale)',
         'c4_ylabel':  'Latency (ms)',
         # chart 5 — per-scale
-        'c5_title':   'Chart 5 — Memory Footprint by Test ({scale} scale)\nSolid = average  |  Dashed = peak',
+        'c5_title':   'Memory Footprint by Test ({scale} scale)\nSolid = average  |  Dashed = peak',
         # chart 6 — mixed
-        'c6_title':       'Chart 6 — Latency Degradation Heatmap: Small→Medium  |  Medium→Large\nGreen = stable  |  Red = high degradation',
+        'c6_title':       'Latency Degradation Heatmap: Small→Medium  |  Medium→Large\nGreen = stable  |  Red = high degradation',
         'c6_subtitle_sm': 'Small → Medium',
         'c6_subtitle_ml': 'Medium → Large',
         'c6_cbar':        'Avg latency increase (%)',
         # chart 7 — mixed
-        'c7_title':   'Chart 7 — Scalability: Avg Latency Small → Medium → Large',
+        'c7_title':   'Scalability: Avg Latency Small → Medium → Large',
         # chart 8 — mixed
-        'c8_title':   'Chart 8 — Write Throughput Scaling: Small → Medium → Large',
+        'c8_title':   'Write Throughput Scaling: Small → Medium → Large',
         'c8_ylabel':  'WRITE Throughput (pts/s) — log scale',
         # chart 9 — mixed
-        'c9_title':   'Chart 9 — Latest-Point Latency: O(1) vs Linear Scaling',
+        'c9_title':   'Latest-Point Latency: O(1) vs Linear Scaling',
         'c9_ylabel':  'Avg Latency (ms)',
         'c9_note':    'InfluxDB grows linearly\n(TSM tail-seek cost)\n\nTimescaleDB & IoTDB stay flat\n(index / last-value cache)',
         # chart 10 — mixed
-        'c10_title':  'Chart 10 — Value-Filter Latency Scaling (100× data growth)',
+        'c10_title':  'Value-Filter Latency Scaling (100× data growth)',
         'c10_ylabel': 'Avg Latency (ms) — log scale',
         'c10_ratio':  '{ratio}× (S→L)',
         # chart 11 — mixed
-        'c11_title':    'Chart 11 — CPU Usage: READ Workload Across Scales',
+        'c11_title':    'CPU Usage: READ Workload Across Scales',
         'c11_ylabel':   'CPU Usage (%)',
         'c11_avg_leg':  'Avg CPU',
         'c11_peak_leg': 'Peak − Avg gap',
         # chart 12 — mixed
-        'c12_title':    'Chart 12 — Batch-Small JIT Warmup: All Databases',
+        'c12_title':    'Batch-Small JIT Warmup: All Databases',
         'c12_sub_thr':  'Throughput (pts/s)',
         'c12_sub_lat':  'Avg Latency (ms)',
         # chart 13 — mixed
-        'c13_title':  'Chart 13 — Memory Footprint Scaling: Small → Medium → Large',
+        'c13_title':  'Memory Footprint Scaling: Small → Medium → Large',
         'c13_ylabel': 'Peak Memory (MB)',
         # chart 14 — mixed
-        'c14_title':  'Chart 14 — READ Workload: Avg & P99 Latency Across Scales',
+        'c14_title':  'READ Workload: Avg & P99 Latency Across Scales',
         'c14_ylabel': 'Latency (ms) — log scale',
         # chart 15 — mixed
-        'c15_title':  'Chart 15 — Out-of-Order Write Degradation vs Sequential',
+        'c15_title':  'Out-of-Order Write Degradation vs Sequential',
         'c15_ylabel': 'Throughput Degradation (%)\n(OOO vs sequential WRITE)',
         # comparison shared
         'original_label': 'Original',
         'tuned_label':    'Tuned',
         # chart 16 — comparison
-        'c16_title':  'Chart 16 — WRITE Throughput: Original vs Tuned',
+        'c16_title':  'WRITE Throughput: Original vs Tuned',
         'c16_ylabel': 'WRITE Throughput (pts/s) — log scale',
         # chart 17 — comparison
-        'c17_title':  'Chart 17 — Write P99 Latency: Original vs Tuned',
+        'c17_title':  'Write P99 Latency: Original vs Tuned',
         'c17_ylabel': 'P99 Latency (ms) — log scale',
         # chart 18 — comparison
-        'c18_title':  'Chart 18 — Out-of-Order Penalty: Original vs Tuned',
+        'c18_title':  'Out-of-Order Penalty: Original vs Tuned',
         'c18_ylabel': 'Throughput Degradation (%) OOO vs WRITE',
         # chart 19 — comparison
-        'c19_title':   'Chart 19 — READ Workload: CPU and P99 Before vs After',
+        'c19_title':   'READ Workload: CPU and P99 Before vs After',
         'c19_sub_cpu': 'Avg CPU (%)',
         'c19_sub_p99': 'P99 Latency (ms) — log scale',
         # chart 20 — comparison
-        'c20_title':  'Chart 20 — Memory Baseline: Original vs Tuned (BATCH-SMALL start)',
+        'c20_title':  'Memory Baseline: Original vs Tuned (BATCH-SMALL start)',
         'c20_ylabel': 'Avg Memory at BATCH-SMALL (MB) — log scale',
     },
     'pt-br': {
@@ -162,78 +162,78 @@ STRINGS = {
             'VALUE-FILTER': 'FILTRO DE VALOR (VALUE-FILTER)',
         },
         # chart 1 — per-scale
-        'c1_title':   'Gráfico 1 — Taxa de Transferência de Escrita por Banco de Dados',
+        'c1_title':   'Taxa de Transferência de Escrita por Banco de Dados',
         'c1_xlabel':  'Tipo de Teste de Escrita',
         'c1_ylabel':  'Taxa de Transferência (pts/s) — escala logarítmica',
         # chart 2 — per-scale
-        'c2_title':   'Gráfico 2 — Perfil de Eficiência (teste WRITE, escala {scale})\n1 = melhor desempenho',
+        'c2_title':   'Perfil de Eficiência (teste WRITE, escala {scale})\n1 = melhor desempenho',
         'c2_axes':    ['Taxa de Transf.', 'Lat. Média\n(↑=melhor)', 'Lat. P99\n(↑=melhor)',
                        'CPU Média\n(↑=melhor)', 'Mem. Pico\n(↑=melhor)'],
         # chart 3 — per-scale
-        'c3_title':   'Gráfico 3 — Custo × Benefício: Memória vs Taxa de Transferência (escala {scale})',
+        'c3_title':   'Custo × Benefício: Memória vs Taxa de Transferência (escala {scale})',
         'c3_xlabel':  'Memória Pico (MB) — escala logarítmica',
         'c3_ylabel':  'Taxa de Transferência (pts/s) — escala logarítmica',
         'c3_favorable':   '← Favorável\n(alta perf., baixo recurso)',
         'c3_unfavorable': 'Desfavorável →\n(baixa perf., alto recurso)',
         # chart 4 — per-scale
-        'c4_title':   'Gráfico 4 — Consistência P99: Média + Folga até P99 (escala {scale})',
+        'c4_title':   'Consistência P99: Média + Folga até P99 (escala {scale})',
         'c4_ylabel':  'Latência (ms)',
         # chart 5 — per-scale
-        'c5_title':   'Gráfico 5 — Footprint de Memória por Teste (escala {scale})\nLinha sólida = média  |  Linha tracejada = pico',
+        'c5_title':   'Footprint de Memória por Teste (escala {scale})\nLinha sólida = média  |  Linha tracejada = pico',
         # chart 6 — mixed
-        'c6_title':       'Gráfico 6 — Heatmap de Degradação: Pequena→Média  |  Média→Grande\nVerde = estável  |  Vermelho = alta degradação',
+        'c6_title':       'Heatmap de Degradação: Pequena→Média  |  Média→Grande\nVerde = estável  |  Vermelho = alta degradação',
         'c6_subtitle_sm': 'Pequena → Média',
         'c6_subtitle_ml': 'Média → Grande',
         'c6_cbar':        'Aumento de latência média (%)',
         # chart 7 — mixed
-        'c7_title':   'Gráfico 7 — Escalabilidade: Latência Média Pequena → Média → Grande',
+        'c7_title':   'Escalabilidade: Latência Média Pequena → Média → Grande',
         # chart 8 — mixed
-        'c8_title':   'Gráfico 8 — Escalonamento da Taxa de Transferência de Escrita: Pequena → Média → Grande',
+        'c8_title':   'Escalonamento da Taxa de Transferência de Escrita: Pequena → Média → Grande',
         'c8_ylabel':  'Taxa de Transf. WRITE (pts/s) — escala logarítmica',
         # chart 9 — mixed
-        'c9_title':   'Gráfico 9 — Latência Latest-Point: O(1) vs Escalonamento Linear',
+        'c9_title':   'Latência Latest-Point: O(1) vs Escalonamento Linear',
         'c9_ylabel':  'Latência Média (ms)',
         'c9_note':    'InfluxDB cresce linearmente\n(busca no final do TSM)\n\nTimescaleDB & IoTDB ficam constantes\n(índice / cache de último valor)',
         # chart 10 — mixed
-        'c10_title':  'Gráfico 10 — Escalonamento de Latência Value-Filter (crescimento 100× nos dados)',
+        'c10_title':  'Escalonamento de Latência Value-Filter (crescimento 100× nos dados)',
         'c10_ylabel': 'Latência Média (ms) — escala logarítmica',
         'c10_ratio':  '{ratio}× (P→G)',
         # chart 11 — mixed
-        'c11_title':    'Gráfico 11 — Uso de CPU: Carga de Leitura por Escala',
+        'c11_title':    'Uso de CPU: Carga de Leitura por Escala',
         'c11_ylabel':   'Uso de CPU (%)',
         'c11_avg_leg':  'CPU Média',
         'c11_peak_leg': 'Folga Pico − Média',
         # chart 12 — mixed
-        'c12_title':    'Gráfico 12 — Aquecimento JIT (Batch-Small): Todos os Bancos',
+        'c12_title':    'Aquecimento JIT (Batch-Small): Todos os Bancos',
         'c12_sub_thr':  'Taxa de Transferência (pts/s)',
         'c12_sub_lat':  'Latência Média (ms)',
         # chart 13 — mixed
-        'c13_title':  'Gráfico 13 — Escalonamento do Footprint de Memória: Pequena → Média → Grande',
+        'c13_title':  'Escalonamento do Footprint de Memória: Pequena → Média → Grande',
         'c13_ylabel': 'Memória Pico (MB)',
         # chart 14 — mixed
-        'c14_title':  'Gráfico 14 — Carga de Leitura: Latência Média e P99 por Escala',
+        'c14_title':  'Carga de Leitura: Latência Média e P99 por Escala',
         'c14_ylabel': 'Latência (ms) — escala logarítmica',
         # chart 15 — mixed
-        'c15_title':  'Gráfico 15 — Degradação de Escrita Fora de Ordem vs Sequencial',
+        'c15_title':  'Degradação de Escrita Fora de Ordem vs Sequencial',
         'c15_ylabel': 'Degradação da Taxa de Transferência (%)\n(OOO vs WRITE sequencial)',
         # comparison shared
         'original_label': 'Original',
         'tuned_label':    'Ajustado',
         # chart 16 — comparison
-        'c16_title':  'Gráfico 16 — Taxa de Transferência WRITE: Original vs Ajustado',
+        'c16_title':  'Taxa de Transferência WRITE: Original vs Ajustado',
         'c16_ylabel': 'Taxa de Transf. WRITE (pts/s) — escala logarítmica',
         # chart 17 — comparison
-        'c17_title':  'Gráfico 17 — Latência P99 de Escrita: Original vs Ajustado',
+        'c17_title':  'Latência P99 de Escrita: Original vs Ajustado',
         'c17_ylabel': 'Latência P99 (ms) — escala logarítmica',
         # chart 18 — comparison
-        'c18_title':  'Gráfico 18 — Penalidade Fora de Ordem: Original vs Ajustado',
+        'c18_title':  'Penalidade Fora de Ordem: Original vs Ajustado',
         'c18_ylabel': 'Degradação da Taxa de Transferência (%) OOO vs WRITE',
         # chart 19 — comparison
-        'c19_title':   'Gráfico 19 — Carga de Leitura: CPU e P99 Antes vs Depois',
+        'c19_title':   'Carga de Leitura: CPU e P99 Antes vs Depois',
         'c19_sub_cpu': 'CPU Média (%)',
         'c19_sub_p99': 'Latência P99 (ms) — escala log',
         # chart 20 — comparison
-        'c20_title':  'Gráfico 20 — Baseline de Memória: Original vs Ajustado (início BATCH-SMALL)',
+        'c20_title':  'Baseline de Memória: Original vs Ajustado (início BATCH-SMALL)',
         'c20_ylabel': 'Memória Média no BATCH-SMALL (MB) — escala logarítmica',
     },
 }
