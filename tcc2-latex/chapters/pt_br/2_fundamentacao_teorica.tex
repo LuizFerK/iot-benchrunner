@@ -56,19 +56,6 @@ a consultas complexas. O projeto de banco de dados tipicamente começa com um di
 Entidade-Relacionamento (ER) como representação de alto nível, que é então traduzido em um
 esquema relacional.
 
-\subsection{Bancos de Dados Relacionais}
-
-Os bancos de dados relacionais organizam os dados em tabelas compostas por linhas e colunas,
-nas quais cada tabela representa uma entidade e cada linha corresponde a um registro dessa
-entidade. A interação com esses sistemas é realizada por meio da linguagem SQL, que permite
-definir, manipular e consultar os dados de forma padronizada. Uma propriedade central dos
-bancos de dados relacionais são as garantias ACID (Atomicidade, Consistência, Isolamento e
-Durabilidade), que asseguram a integridade das transações mesmo em cenários de falha ou acesso
-concorrente, tornando-os amplamente adotados em aplicações corporativas que exigem consistência
-estrita dos dados. No contexto deste trabalho, o TimescaleDB, um dos bancos de dados avaliados,
-é implementado como uma extensão do PostgreSQL, um dos SGBDs relacionais de código aberto mais
-consolidados, herdando toda a sua pilha de armazenamento e garantias de consistência.
-
 \subsection{Bancos de Dados Distribuídos}
 
 Os bancos de dados distribuídos (BDDs) são a convergência das tecnologias de sistemas de
@@ -121,7 +108,7 @@ Registros meteorológicos, indicadores econômicos e métricas de saúde de paci
 dados de séries temporais. Os dados de séries temporais também incluem métricas de servidores,
 monitoramento de desempenho de aplicações, dados de rede, dados de sensores, eventos, cliques
 e muitos outros tipos de dados analíticos~\citep{InfluxDataTimeSeries}.
-A Figura~\ref{fig:temporal_data} ilustra uma série temporal de medições meteorológicas. Cada ponto no gráfico corresponde a uma leitura realizada em um instante específico: o eixo horizontal representa a progressão do tempo, enquanto o eixo vertical representa o valor medido. Essa estrutura evidencia a natureza append-only dos BDSTs, nos quais os dados não são alterados retrospectivamente, mas acumulados continuamente ao longo do tempo.
+A Figura~\ref{fig:temporal_data} ilustra uma série temporal de medições meteorológicas. Cada ponto no gráfico corresponde a uma leitura realizada em um instante específico. O eixo horizontal representa a progressão do tempo, enquanto o eixo vertical representa o valor medido.
 
 \begin{figure}[ht]
   \centering
@@ -141,7 +128,7 @@ A Figura~\ref{fig:temporal_data} ilustra uma série temporal de medições meteo
 
 A Figura~\ref{fig:tsdb_record} mostra a tabela correspondente em um BDST, onde cada linha é um
 registro indexado por tempo que captura pressão atmosférica, temperatura, umidade e outras
-leituras em um momento específico. Observa-se que o campo de tempo funciona como chave primária natural, permitindo que consultas por intervalo temporal sejam atendidas com varreduras contíguas em disco: é exatamente essa propriedade estrutural que confere aos BDSTs desempenho superior frente aos bancos relacionais de propósito geral para esse padrão de acesso.
+leituras em um momento específico.
 
 Como explicado por~\cite{Ozsu2011}, uma série temporal normalmente consiste apenas em valores
 numéricos, contínuos ou discretos. Isso torna possível modelar fluxos de dados que contêm apenas

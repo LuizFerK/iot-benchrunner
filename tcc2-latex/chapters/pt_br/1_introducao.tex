@@ -10,7 +10,7 @@ na Figura~\ref{fig:iot_projection}.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\columnwidth]{figures/pt_br/projecao-iot}
-  \caption{IoT: dispositivos em uso globalmente. Fonte:~\citep{thierer2015iot}.}
+  \caption{IoT: dispositivos em uso globalmente. Fonte:~\cite{thierer2015iot}.}
   \label{fig:iot_projection}
 \end{figure}
 
@@ -32,11 +32,12 @@ Nesse cenário, os Bancos de Dados de Séries Temporais (BDSTs) emergiram como s
 especializadas, arquitetadas desde a concepção para atender às demandas exclusivas dos dados
 temporais~\citep{InfluxDataTimeSeries}. Os
 bancos de dados relacionais tradicionais sofrem de ineficiências de indexação e limitações de
-memória ao lidar com grandes volumes de dados temporais, enquanto os BDSTs mantêm alto
-desempenho por terem sido construídos com o tempo como preocupação central ~~\citep{naqvi2017influxdb}. Além da vazão,
+memória ao lidar com grandes volumes de dados temporais.
+Os BDSTs, por sua vez, mantêm alto desempenho por terem sido construídos com o tempo
+como preocupação central~\citep{naqvi2017influxdb}. Além da vazão,
 os BDSTs oferecem mecanismos especializados de compressão, co-localização de dados em
 intervalos de tempo e políticas automáticas de retenção, que reduzem os custos operacionais~\citep{Dunning2014}.
-Esses recursos são especialmente importantes para aplicações IoT, nas quais medições contínuas de sensores demandam
+Esses recursos são importantes para aplicações IoT, nas quais medições contínuas de sensores demandam
 escalabilidade e uso econômico de recursos.
 
 O cenário dos BDSTs ampliou-se nos últimos anos, com sistemas adotando abordagens
