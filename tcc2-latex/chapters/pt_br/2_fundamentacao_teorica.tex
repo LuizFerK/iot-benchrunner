@@ -32,17 +32,17 @@ abstrata dos dados, ocultando os detalhes de armazenamento e representação par
 como uma abstração prática para resolução de problemas.
 
 \cite{Ramakrishnan2003} enumeram diversas vantagens dos SGBDs em relação aos sistemas de arquivos
-tradicionais: independência de dados (os programas de aplicação são isolados dos detalhes de
-representação e armazenamento de dados); acesso eficiente aos dados (por meio de técnicas
-sofisticadas de indexação e otimização de consultas); integridade e segurança dos dados (o SGBD
+tradicionais: independência de dados (i.e., os programas de aplicação são isolados dos detalhes de
+representação e armazenamento de dados); acesso eficiente aos dados (i.e., por meio de técnicas
+sofisticadas de indexação e otimização de consultas); integridade e segurança dos dados (i.e., o SGBD
 impõe restrições e restringe acessos não autorizados); e suporte para acesso concorrente e
 recuperação de falhas.
 
 O modelo relacional, proposto por Codd em 1970, é simples e elegante: um banco de dados é visto
-como uma coleção de relações (tabelas com linhas e colunas), uma representação tão intuitiva
+como uma coleção de relações (i.e., tabelas com linhas e colunas), uma representação tão intuitiva
 que mesmo usuários não especialistas conseguem entender o conteúdo armazenado~\citep{Ramakrishnan2003}.
-A estrutura de cada relação consiste em um esquema (nomes dos campos e seus domínios) e uma
-instância (o conjunto de tuplas, ou registros). Uma propriedade essencial é que cada relação é
+A estrutura de cada relação consiste em um esquema (i.e., nomes dos campos e seus domínios) e uma
+instância (i.e., o conjunto de tuplas, ou registros). Uma propriedade essencial é que cada relação é
 um conjunto de tuplas únicas, garantindo a ausência de registros duplicados. Restrições de
 integridade, ou seja, condições especificadas no esquema que restringem os dados armazenáveis,
 garantem que apenas instâncias válidas do banco de dados possam ser persistidas. Entre elas,
@@ -79,7 +79,7 @@ acessível por meio de uma interface comum.
 
 A arquitetura de um SGBDD pode assumir diversas formas, incluindo cliente/servidor,
 ponto-a-ponto e sistemas multibanco~\citep{Ozsu2011}. Em sistemas cliente/servidor, as funções
-são divididas entre clientes (que gerenciam a interface do usuário) e servidores (responsáveis
+são divididas entre clientes (i.e., que gerenciam a interface do usuário) e servidores (i.e., responsáveis
 pelo gerenciamento de dados). Em sistemas ponto-a-ponto, todas as máquinas possuem
 funcionalidade completa de SGBD e podem se comunicar diretamente. Os sistemas multibanco lidam
 com a integração de bancos de dados heterogêneos e autônomos.
@@ -87,7 +87,7 @@ com a integração de bancos de dados heterogêneos e autônomos.
 Um benefício fundamental dos BDDs é o desempenho melhorado por meio da localidade de dados e
 do paralelismo. Como observam~\cite{Ozsu2011}, armazenar dados próximos aos seus pontos de uso
 reduz a contenção de CPU e entrada/saída, enquanto o paralelismo pode ser explorado tanto entre consultas
-(interqueries) quanto dentro de uma única consulta (intraquery). No entanto, isso traz desafios:
+(i.e., interqueries) quanto dentro de uma única consulta (i.e., intraquery). No entanto, isso traz desafios:
 consistência da replicação, sincronização de transações distribuídas e detecção de deadlock
 distribuído, como destacado por~\cite{Ozsu2011} e~\cite{silberschatz2020}. O objetivo mais
 importante da tecnologia de banco de dados, como argumentam~\cite{Ozsu2011}, é a integração,
@@ -177,7 +177,7 @@ Os três bancos de dados comparados neste trabalho representam três arquitetura
 armazenamento para séries temporais, cada uma com diferentes compromissos entre vazão de escrita,
 latência de leitura e consumo de recursos.
 
-\textbf{Apache IoTDB}~\cite{wang2023iotdb} foi concebido especificamente para o domínio IoT.
+\textbf{Apache IoTDB}~\citep{wang2023iotdb} foi concebido especificamente para o domínio IoT.
 Ele usa o TsFile~\citep{zhao2024tsfile}, um formato de arquivo colunar personalizado que armazena dados em blocos
 ordenados com estatísticas de mínimo/máximo por bloco. As escritas são primeiro absorvidas em
 um buffer em memória (memtable) gerenciado pela JVM e descarregadas para segmentos TsFile

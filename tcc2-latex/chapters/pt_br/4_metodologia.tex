@@ -3,8 +3,8 @@
 
 Este trabalho adota uma abordagem experimental controlada para comparar três bancos de dados de
 séries temporais em nove padrões distintos de carga de trabalho IoT e três escalas de volume de
-dados. A avaliação cobre vazão de escrita, latência por operação (média e percentil 99) e consumo
-de recursos (CPU e memória) para cada combinação de banco de dados, tipo de carga de trabalho e
+dados. A avaliação cobre vazão de escrita, latência por operação (i.e., média e percentil 99) e consumo
+de recursos (i.e., CPU e memória) para cada combinação de banco de dados, tipo de carga de trabalho e
 escala. O objetivo é caracterizar quais compromissos arquiteturais favorecem quais perfis de
 aplicação.
 
@@ -70,7 +70,7 @@ Ferramentas alternativas foram avaliadas. O Time Series Benchmark Suite (TSBS) o
 framework maduro para múltiplos bancos de dados, mas carece de suporte nativo ao IoTDB no
 momento desta escrita. O Apache JMeter lida bem com sistemas baseados em HTTP, mas requer scripts personalizados para interfaces
 Thrift e JDBC, introduzindo potencial sobrecarga específica da ferramenta. A interface uniforme
-do iot-benchmark e a semântica de carga de trabalho específica para IoT (clientes
+do iot-benchmark e a semântica de carga de trabalho específica para IoT (i.e., clientes
   concorrentes organizados em hierarquias de dispositivos e sensores, tamanhos de lote
 configuráveis e geração de dados fora de ordem distribuída por Poisson) tornaram-no a
 escolha mais adequada para este estudo. Cabe registrar, no entanto, que o iot-benchmark é
@@ -178,16 +178,13 @@ de dados mais elevados, como mostrado nos resultados da Seção~\ref{sec:scale-e
 benchmark de escala única arrisca tirar conclusões que se aplicam apenas a um intervalo
 estreito de dados.
 
-A escolha de cada nível reflete cenários de implantação IoT reconhecíveis. A escala pequena
-(5 clientes, 10 dispositivos, 10 sensores, 1.000 laços) representa ambientes com poucos
-sensores e baixa frequência de amostragem, comuns em projetos piloto ou instalações
-residenciais, e serve principalmente para verificar a correção funcional e medir a sobrecarga
-base de cada banco de dados. A escala média (5 clientes, 10 dispositivos, 10 sensores,
-5.000 laços) corresponde a instalações industriais de porte moderado, onde o volume acumulado
+A escolha de cada nível reflete cenários de implantação IoT. A escala pequena representa ambientes com poucos
+sensores e baixa frequência de amostragem, comuns em provas de conceito ou instalações
+residenciais e serve principalmente para verificar a correção funcional e medir a sobrecarga
+base de cada banco de dados. A escala média corresponde a instalações industriais de porte moderado, o volume acumulado
 começa a pressionar os mecanismos de compressão e os tamanhos de buffer internos. A escala
-grande (10 clientes, 50 dispositivos, 20 sensores, 5.000 laços) simula ambientes de alta
-densidade, como cidades inteligentes ou plantas industriais de grande porte, onde o volume de
-dados é o principal gargalo e diferenças arquiteturais entre os bancos de dados se tornam
+grande simula ambientes de alta densidade, como cidades inteligentes ou plantas industriais, onde o volume de
+dados é um gargalo e diferenças arquiteturais entre os bancos de dados se tornam
 mais pronunciadas.
 
 \subsection{Ambiente e Reprodutibilidade}
